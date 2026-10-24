@@ -1,0 +1,107 @@
+spring:
+  application:
+    name: communication
+
+  datasource:
+    # 使用 TCP 连接，避免 localhost 命名管道连接到错误实例。
+    url: ${DB_URL:jdbc:mysql://127.0.0.1:3306/communication?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&rewriteBatchedStatements=true}
+    username: ${DB_USERNAME:root}
+    # 必须由运行环境提供，禁止写入仓库。
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 1
+    locations: classpath:db/migration
+
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+
+  servlet:
+    multipart:
+      # 地图包较大，按部署规模调整。
+      max-file-size: 2048MB
+      max-request-size: 2200MB
+
+jwt:
+  # 生产环境应固定 JWT_SECRET，否则重启后已签发令牌失效。
+  secret: ${JWT_SECRET:${random.value}${random.value}}
+  expiration: 86400000
+
+# 注册默认关闭；引导管理员密码仅通过环境变量提供。
+security:
+  registration:
+    enabled: ${REGISTRATION_ENABLED:false}
+  bootstrap-admin:
+    password: ${BOOTSTRAP_ADMIN_PASSWORD:}
+
+database:
+  expected-port: ${DB_EXPECTED_PORT:3306}
+  expected-name: ${DB_EXPECTED_NAME:communication}
+  # 留空时只记录数据库指纹，不校验 UUID。
+  expected-server-uuid: ${DB_EXPECTED_SERVER_UUID:}
+
+data-initializer:
+  # 启用后会修复群成员一致性，可能删除异常成员记录。
+  heal-group-consistency-enabled: ${HEAL_GROUP_CONSISTENCY_ENABLED:false}
+
+# 存储目录
+video:
+  storage:
+    path: E:/videos
+
+recording:
+  storage:
+    path: E:/recordings
+
+file:
+  upload:
+    path: D:/uploads
+
+media:
+  ffmpeg:
+    # 视频封面生成工具；留空时跳过封面生成。
+    path: ${MEDIA_FFMPEG_PATH:}
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+
+mediamtx:
+  # 与后端同机部署；对外媒体地址按请求 Host 自动生成。
+  api: http://localhost:9997
+
+# 通话录制：仅在点击录制后创建任务，媒体源由服务端生成。
+call-recording:
+  enabled: ${CALL_RECORDING_ENABLED:true}
+  storage: ${CALL_RECORDING_STORAGE:./data/call-recordings}
+  ffmpeg: ${CALL_RECORDING_FFMPEG:ffmpeg}
+  ffprobe: ${CALL_RECORDING_FFPROBE:ffprobe}
+  rtsp-base: ${CALL_RECORDING_RTSP_BASE:rtsp://127.0.0.1:8554}
+  max-concurrent: 4
+  compose-workers: 2
+  max-seconds: 3600
+  retention-hours: 72
+
+# 固定摄像头诊断与按需兼容转码。
+camera-media:
+  # 工具路径可由环境变量、jar 旁配置或 PATH 提供。
+  rtsp-base: ${CAMERA_RTSP_BASE:rtsp://127.0.0.1:8554}
+  ffprobe: ${CAMERA_FFPROBE:ffprobe}
+  ffmpeg: ${CAMERA_FFMPEG:ffmpeg}
+  probe-seconds: 8
+  probe-workers: 2
+  diagnostic-cache-seconds: 60
+  compatibility-enabled: ${CAMERA_COMPATIBILITY_ENABLED:true}
+  max-transcodes: 2
+  # 兼容输出无人观看后的回收等待时间。
+  idle-seconds: ${CAMERA_IDLE_SECONDS:120}
+  # /play 最长等待时间，客户端超时应大于该值。
+  play-ready-timeout-ms: ${CAMERA_PLAY_READY_TIMEOUT_MS:6000}
+  # 16-bit 小端私有 PCM 源启用；标准 L16 源必须设为 false。
+  pcm-little-endian: ${CAMERA_PCM_LITTLE_ENDIAN:true}
+  pcm-sample-rate: ${CAMERA_PCM_SAMPLE_RATE:16000}

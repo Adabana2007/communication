@@ -1,0 +1,42 @@
+# Build output
+/target/
+/build/
+*.class
+
+# IDE and editor files
+/.idea/
+/.vscode/
+*.iml
+.classpath
+.project
+.settings/
+
+# Local runtime data
+/data/
+/uploads/
+/videos/
+/recordings/
+/logs/
+*.log
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+application-local.yml
+application-*.local.yml
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+
+# Operating-system files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.bak
+*.orig
+*~

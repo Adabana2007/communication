@@ -1,0 +1,181 @@
+JSON hnist.communication.dto.AlarmStatusRequest -> remark,status
+JSON hnist.communication.dto.CallBusyMarkRequest -> busyType,userId
+JSON hnist.communication.dto.CallRecordingLayoutRequest -> cameraOff,mirror,swapped
+JSON hnist.communication.dto.CallRecordingPulseRequest -> cameraOff,muted,peerId,roomId
+JSON hnist.communication.dto.CallRecordingStartRequest -> cameraOff,mirror,peerId,requestId,roomId,swapped
+JSON hnist.communication.dto.CallRecordingStopRequest -> reason
+JSON hnist.communication.dto.CameraRequest -> brand,deviceCode,deviceModel,ip,name,password,playbackMode,playbackPath,port,rtspUrl,snapshotUrl,sourceProtocol,username
+JSON hnist.communication.dto.GroupCreateRequest -> avatar,name,ownerUsername
+JSON hnist.communication.dto.GroupMessageRequest -> content,fp,groupId,msgType,quoteMessageId,senderId
+JSON hnist.communication.dto.GroupUpdateRequest -> avatar,name,ownerUsername
+JSON hnist.communication.dto.LocationUpdateRequest -> accuracy,address,direction,latitude,longitude,sessionId,speed,timestamp,userId
+JSON hnist.communication.dto.LoginRequest -> password,username
+JSON hnist.communication.dto.MapDownloadUpdateRequest -> errorMsg,fileSize,progress,status
+JSON hnist.communication.dto.MemberAddRequest -> operatorId,userIds
+JSON hnist.communication.dto.MemberUpdateRequest -> nickname,operatorId,role
+JSON hnist.communication.dto.TrajectorySessionFinishRequest -> durationSec,endTime,sessionId
+JSON hnist.communication.dto.TrajectorySessionStartRequest -> sessionId,startTime,userId
+JSON hnist.communication.dto.UserRequest -> nickname,password,phone,role,username
+JSON hnist.communication.dto.UserUpdateRequest -> email,nickname,password,phone,role,sex,username
+JSON hnist.communication.dto.VideoRenameRequest -> newFileName
+JSON hnist.communication.entity.Alarm -> createdAt,description,handleRemark,handledAt,handledBy,id,imageMediaIds,imagePaths,latitude,longitude,status,userId,voiceDuration,voiceMediaId,voicePath
+JSON hnist.communication.entity.AlarmMedia -> alarmId,createdAt,data,fileName,id,mediaType,mime,size
+JSON hnist.communication.entity.AuditLog -> clientIp,createdAt,id,method,requestPath,responseStatus,success,userId,username
+JSON hnist.communication.entity.CallRecord -> callType,calleeId,callerId,createdAt,durationSeconds,endTime,id,mediaType,recordFileUrl,roomId,startTime,status
+JSON hnist.communication.entity.Camera -> audioCodec,brand,compatibilitySourceHash,createdAt,deviceCode,deviceModel,hlsUrl,id,ip,lastError,mediamtxPath,name,password,playbackMode,playbackPath,port,profileToken,rtspUrl,snapshotUrl,sourceProtocol,status,updatedAt,username,videoCodec,webrtcUrl
+JSON hnist.communication.entity.ChatMessage -> content,createdAt,fp,id,msgType,quote,quoteMessageId,recalledAt,receiverId,senderId
+JSON hnist.communication.entity.ChatMessageAction -> action,actorId,actorName,chatType,createdAt,fp,groupId,id,messageId,peerId,userId
+JSON hnist.communication.entity.Contact -> contactUserId,friendGroupId,id,remark,userId
+JSON hnist.communication.entity.Device -> aesLevel,createdAt,dhcpDns,dhcpEnabled,dhcpEnd,dhcpGateway,dhcpMask,dhcpStart,distance,id,meshId,name,nodeAddr,nodeBw,nodeFreq,nodeMac,nodePower,shortName,updatedAt,wifiName,wifiPassword
+JSON hnist.communication.entity.DictData -> cssClass,dictLabel,dictSort,dictType,dictValue,id,isDefault,listClass,status
+JSON hnist.communication.entity.DictType -> dictName,dictType,id,status
+JSON hnist.communication.entity.FriendGroup -> groupId,name,ownerId
+JSON hnist.communication.entity.Group -> avatar,createdAt,groupId,name,ownerId,updatedAt
+JSON hnist.communication.entity.GroupMember -> groupId,id,joinedAt,nickname,role,userId
+JSON hnist.communication.entity.GroupMessage -> content,createdAt,fp,groupId,id,msgType,quote,quoteMessageId,recalledAt,senderId,senderName
+JSON hnist.communication.entity.LocationHistory -> accuracy,direction,id,latitude,longitude,recordedAt,sessionId,speed,userId
+JSON hnist.communication.entity.MapDownload -> createdAt,errorMsg,fileSize,id,progress,regionId,status,updatedAt,userId
+JSON hnist.communication.entity.MapRegion -> adcode,baiduCode,bbox,centerLat,centerLng,defaultZoom,id,level,mapVersion,maxZoom,minZoom,name,packageMd5,packageSha256,packageSize,parentId,sizeText,sortOrder,tileCount
+JSON hnist.communication.entity.MapTile -> id,regionId,size,tileData,x,y,z
+JSON hnist.communication.entity.PhoneCamera -> createdAt,deviceId,deviceName,hlsUrl,id,lastHeartbeat,mediamtxPath,status,updatedAt,userId
+JSON hnist.communication.entity.TrajectorySession -> createdAt,distanceKm,durationSec,endTime,id,name,pointCount,sessionId,startTime,status,userId
+JSON hnist.communication.entity.User -> avatar,email,groupId,nickname,password,phone,role,sex,userId,username
+JSON hnist.communication.entity.UserLocation -> address,id,latitude,longitude,updatedAt,userId
+JSON hnist.communication.entity.VoiceMessage -> createdAt,duration,filePath,groupId,id,senderId,senderName
+JSON hnist.communication.model.VideoFile -> fileName,fileSize,format,lastModified
+JSON hnist.communication.vo.AlarmVO -> createdAt,description,handleRemark,handledAt,handledBy,handledByName,id,imageMediaIds,imagePaths,latitude,longitude,nickname,status,userId,username,voiceDuration,voiceMediaId,voicePath
+JSON hnist.communication.vo.CallRecordVO -> callType,calleeId,calleeName,callerId,callerName,createdAt,durationSeconds,endTime,id,mediaType,recordFileUrl,roomId,startTime,status
+JSON hnist.communication.vo.CallStatsVO -> avgDuration,todayCount,totalCount,videoRatio
+JSON hnist.communication.vo.CameraVO -> audioCodec,brand,checkedAt,createdAt,deviceCode,deviceModel,diagnostic,hlsUrl,id,ip,lastError,mediamtxPath,name,playbackMode,playbackPath,playbackSourceState,port,profileToken,rtspUrl,snapshotUrl,sourceMessage,sourceProtocol,sourceState,status,tracks,updatedAt,username,videoCodec,webrtcUrl
+JSON hnist.communication.vo.GroupMemberVO -> groupId,id,joinedAt,nickname,role,userId,username
+JSON hnist.communication.vo.GroupMessageVO -> content,createdAt,fp,groupId,groupName,id,msgType,quote,quoteMessageId,recalledAt,senderId,senderName
+JSON hnist.communication.vo.GroupUnreadVO -> groupId,groupName,lastMessageAt,unreadCount
+JSON hnist.communication.vo.GroupVO -> avatar,createdAt,groupId,name,ownerId,ownerUsername,updatedAt
+JSON hnist.communication.vo.LocationVO -> address,id,latitude,longitude,updatedAt,userId,username
+JSON hnist.communication.vo.MapCityVO -> adcode,downloadId,id,mapVersion,name,progress,size,status,tileCount
+JSON hnist.communication.vo.MapProvinceVO -> downloadedCount,id,name,totalCount
+JSON hnist.communication.vo.MessageQuoteVO -> content,fp,messageId,msgType,senderId,senderName,status
+JSON hnist.communication.vo.PhoneCameraVO -> createdAt,deviceId,deviceName,hlsUrl,id,lastHeartbeat,status,userId,username,webrtcUrl
+JSON hnist.communication.vo.UserVO -> avatar,email,generation,groupId,groupName,nickname,phone,role,sex,userId,username
+ROUTE DELETE /api/call/busy/{userId} CallBusyController#releaseBusy -> hnist.communication.common.Result<java.lang.Void>
+ROUTE DELETE /api/calls/batch CallRecordController#batchDelete -> hnist.communication.common.Result<java.lang.Void>
+ROUTE DELETE /api/calls/{id} CallRecordController#delete -> hnist.communication.common.Result<java.lang.Void>
+ROUTE DELETE /api/cameras/{id} CameraController#delete -> hnist.communication.common.Result<java.lang.Void>
+ROUTE DELETE /api/devices/{id} DeviceController#delete -> hnist.communication.common.Result<java.lang.Void>
+ROUTE DELETE /api/dicts/items/{id} DictController#deleteData -> hnist.communication.common.Result<java.lang.Void>
+ROUTE DELETE /api/dicts/types/{id} DictController#deleteType -> hnist.communication.common.Result<java.lang.Void>
+ROUTE DELETE /api/group-messages/{id} GroupMessageController#delete -> hnist.communication.common.Result<java.lang.Void>
+ROUTE DELETE /api/groups/{groupId}/members GroupMemberController#removeMembers -> hnist.communication.common.Result<java.lang.Void>
+ROUTE DELETE /api/groups/{id} GroupController#delete -> hnist.communication.common.Result<java.lang.Void>
+ROUTE DELETE /api/map/downloads/{id} MapController#deleteDownload -> hnist.communication.common.Result<java.lang.Void>
+ROUTE DELETE /api/map/regions/{regionId}/tiles MapTileController#deleteTiles -> hnist.communication.common.Result<java.lang.Void>
+ROUTE DELETE /api/trajectory/session/{sessionId} LocationController#deleteSession -> hnist.communication.common.Result<java.lang.Void>
+ROUTE DELETE /api/users/{id} UserController#delete -> hnist.communication.common.Result<java.lang.Void>
+ROUTE DELETE /api/videos/{fileName} VideoController#delete -> hnist.communication.common.Result<java.lang.Void>
+ROUTE GET /api/alarms AlarmController#list -> hnist.communication.common.Result<com.baomidou.mybatisplus.extension.plugins.pagination.Page<hnist.communication.vo.AlarmVO>>
+ROUTE GET /api/alarms/media/{id} AlarmController#media -> org.springframework.http.ResponseEntity<byte[]>
+ROUTE GET /api/auth/me AuthController#getCurrentUser -> hnist.communication.common.Result<java.util.Map<java.lang.String, java.lang.Object>>
+ROUTE GET /api/call-recordings CallRecordingController#list -> hnist.communication.common.Result<java.util.List<hnist.communication.manager.recording.CallRecordingJob$View>>
+ROUTE GET /api/call-recordings/{id} CallRecordingController#get -> hnist.communication.common.Result<hnist.communication.manager.recording.CallRecordingJob$View>
+ROUTE GET /api/call-recordings/{id}/file CallRecordingController#file -> org.springframework.http.ResponseEntity<org.springframework.core.io.Resource>
+ROUTE GET /api/call/busy CallBusyController#getBusyUsers -> hnist.communication.common.Result<java.util.Set<java.lang.Long>>
+ROUTE GET /api/calls CallRecordController#list -> hnist.communication.common.Result<com.baomidou.mybatisplus.extension.plugins.pagination.Page<hnist.communication.vo.CallRecordVO>>
+ROUTE GET /api/calls/stats CallRecordController#stats -> hnist.communication.common.Result<hnist.communication.vo.CallStatsVO>
+ROUTE GET /api/calls/{id} CallRecordController#get -> hnist.communication.common.Result<hnist.communication.vo.CallRecordVO>
+ROUTE GET /api/calls/{id}/download CallRecordController#download -> org.springframework.http.ResponseEntity<org.springframework.core.io.Resource>
+ROUTE GET /api/cameras CameraController#list -> hnist.communication.common.Result<java.util.List<hnist.communication.vo.CameraVO>>
+ROUTE GET /api/cameras/{id} CameraController#get -> hnist.communication.common.Result<hnist.communication.vo.CameraVO>
+ROUTE GET /api/captcha AuthController#captcha -> hnist.communication.common.Result<java.util.Map<java.lang.String, java.lang.String>>
+ROUTE GET /api/chat/actions ChatActionController#sync -> hnist.communication.common.Result<java.util.List<hnist.communication.entity.ChatMessageAction>>
+ROUTE GET /api/chat/actions/resolve/{type} ChatActionController#resolve -> hnist.communication.common.Result<java.lang.Long>
+ROUTE GET /api/chat/media/{id} ChatMediaController#media -> org.springframework.http.ResponseEntity<org.springframework.core.io.InputStreamResource>
+ROUTE GET /api/chat/media/{id}/thumb ChatMediaController#thumb -> org.springframework.http.ResponseEntity<org.springframework.core.io.InputStreamResource>
+ROUTE GET /api/devices DeviceController#list -> hnist.communication.common.Result<java.util.List<hnist.communication.entity.Device>>
+ROUTE GET /api/devices/{id} DeviceController#get -> hnist.communication.common.Result<hnist.communication.entity.Device>
+ROUTE GET /api/dicts/items/{id} DictController#getData -> hnist.communication.common.Result<hnist.communication.entity.DictData>
+ROUTE GET /api/dicts/types DictController#listTypes -> hnist.communication.common.Result<com.baomidou.mybatisplus.extension.plugins.pagination.Page<hnist.communication.entity.DictType>>
+ROUTE GET /api/dicts/types/{id} DictController#getType -> hnist.communication.common.Result<hnist.communication.entity.DictType>
+ROUTE GET /api/dicts/types/{type}/items DictController#listDataByType -> hnist.communication.common.Result<java.util.List<hnist.communication.entity.DictData>>
+ROUTE GET /api/group-messages GroupMessageController#list -> hnist.communication.common.Result<com.baomidou.mybatisplus.extension.plugins.pagination.Page<hnist.communication.vo.GroupMessageVO>>
+ROUTE GET /api/group-messages/admin GroupMessageController#listAll -> hnist.communication.common.Result<com.baomidou.mybatisplus.extension.plugins.pagination.Page<hnist.communication.vo.GroupMessageVO>>
+ROUTE GET /api/group-messages/unread GroupMessageController#unread -> hnist.communication.common.Result<java.util.List<hnist.communication.vo.GroupUnreadVO>>
+ROUTE GET /api/group-messages/{id} GroupMessageController#locate -> hnist.communication.common.Result<hnist.communication.vo.GroupMessageVO>
+ROUTE GET /api/groups GroupController#list -> hnist.communication.common.Result<com.baomidou.mybatisplus.extension.plugins.pagination.Page<hnist.communication.vo.GroupVO>>
+ROUTE GET /api/groups/{groupId}/members GroupMemberController#list -> hnist.communication.common.Result<com.baomidou.mybatisplus.extension.plugins.pagination.Page<hnist.communication.vo.GroupMemberVO>>
+ROUTE GET /api/groups/{id} GroupController#get -> hnist.communication.common.Result<hnist.communication.vo.GroupVO>
+ROUTE GET /api/location/group/{groupId} LocationController#getGroupLocations -> hnist.communication.common.Result<java.util.List<hnist.communication.vo.LocationVO>>
+ROUTE GET /api/location/online LocationController#getAllOnlineUsers -> hnist.communication.common.Result<java.util.Set<java.lang.Long>>
+ROUTE GET /api/location/online/{groupId} LocationController#getOnlineUsers -> hnist.communication.common.Result<java.util.Set<java.lang.Long>>
+ROUTE GET /api/location/user/{userId} LocationController#getUserLocation -> hnist.communication.common.Result<hnist.communication.vo.LocationVO>
+ROUTE GET /api/locations/history/{userId} LocationController#getHistory -> hnist.communication.common.Result<java.util.List<hnist.communication.entity.LocationHistory>>
+ROUTE GET /api/locations/history/{userId}/dates LocationController#getAvailableDates -> hnist.communication.common.Result<java.util.List<java.lang.String>>
+ROUTE GET /api/map/provinces MapController#listProvinces -> hnist.communication.common.Result<java.util.List<hnist.communication.vo.MapProvinceVO>>
+ROUTE GET /api/map/provinces/{provinceId}/cities MapController#listCities -> hnist.communication.common.Result<java.util.List<hnist.communication.vo.MapCityVO>>
+ROUTE GET /api/map/regions/active MapTileController#getActiveRegion -> hnist.communication.common.Result<java.util.Map<java.lang.String, java.lang.Object>>
+ROUTE GET /api/map/regions/{regionId}/meta MapTileController#getMeta -> hnist.communication.common.Result<java.util.Map<java.lang.String, java.lang.Object>>
+ROUTE GET /api/map/regions/{regionId}/package.zip MapTileController#downloadPackage -> org.springframework.http.ResponseEntity<org.springframework.core.io.Resource>
+ROUTE GET /api/map/tiles/{regionId}/{z}/{x}/{y}.{format} MapTileController#getTile -> org.springframework.http.ResponseEntity<byte[]>
+ROUTE GET /api/mesh/proxy MeshProxyController#proxy -> hnist.communication.common.Result<java.lang.Object>
+ROUTE GET /api/messages ChatMessageController#list -> hnist.communication.common.Result<com.baomidou.mybatisplus.extension.plugins.pagination.Page<hnist.communication.entity.ChatMessage>>
+ROUTE GET /api/messages/received ChatMessageController#received -> hnist.communication.common.Result<java.util.List<hnist.communication.entity.ChatMessage>>
+ROUTE GET /api/messages/{id} ChatMessageController#locate -> hnist.communication.common.Result<hnist.communication.entity.ChatMessage>
+ROUTE GET /api/phone-cameras PhoneCameraController#list -> hnist.communication.common.Result<java.util.List<hnist.communication.vo.PhoneCameraVO>>
+ROUTE GET /api/phone-cameras/{id}/ready PhoneCameraController#streamReady -> hnist.communication.common.Result<java.lang.Boolean>
+ROUTE GET /api/phone-cameras/{id}/view-status PhoneCameraController#viewStatus -> hnist.communication.common.Result<java.util.Map<java.lang.String, java.lang.Object>>
+ROUTE GET /api/trajectory/history/{sessionId} LocationController#getHistoryBySession -> hnist.communication.common.Result<java.util.List<hnist.communication.entity.LocationHistory>>
+ROUTE GET /api/trajectory/sessions LocationController#listSessions -> hnist.communication.common.Result<java.util.List<hnist.communication.entity.TrajectorySession>>
+ROUTE GET /api/users UserController#list -> hnist.communication.common.Result<com.baomidou.mybatisplus.extension.plugins.pagination.Page<hnist.communication.vo.UserVO>>
+ROUTE GET /api/users/{id} UserController#get -> hnist.communication.common.Result<hnist.communication.vo.UserVO>
+ROUTE GET /api/users/{id}/profile UserController#getProfile -> hnist.communication.common.Result<hnist.communication.vo.UserVO>
+ROUTE GET /api/videos VideoController#list -> hnist.communication.common.Result<com.baomidou.mybatisplus.extension.plugins.pagination.Page<hnist.communication.model.VideoFile>>
+ROUTE GET /api/videos/{fileName}/stream VideoController#stream -> org.springframework.http.ResponseEntity<org.springframework.core.io.Resource>
+ROUTE POST /api/admin/login LoginController#loginBackend -> hnist.communication.common.Result<java.util.Map<java.lang.String, java.lang.String>>
+ROUTE POST /api/alarms AlarmController#create -> hnist.communication.common.Result<hnist.communication.entity.Alarm>
+ROUTE POST /api/alarms/upload AlarmController#upload -> hnist.communication.common.Result<java.util.Map<java.lang.String, java.lang.Object>>
+ROUTE POST /api/call-recordings CallRecordingController#start -> hnist.communication.common.Result<hnist.communication.manager.recording.CallRecordingJob$View>
+ROUTE POST /api/call-recordings/health CallRecordingController#health -> hnist.communication.common.Result<hnist.communication.manager.recording.CallMediaPresence$Health>
+ROUTE POST /api/call-recordings/{id}/layout CallRecordingController#layout -> hnist.communication.common.Result<hnist.communication.manager.recording.CallRecordingJob$View>
+ROUTE POST /api/call-recordings/{id}/retry CallRecordingController#retry -> hnist.communication.common.Result<hnist.communication.manager.recording.CallRecordingJob$View>
+ROUTE POST /api/call-recordings/{id}/stop CallRecordingController#stop -> hnist.communication.common.Result<hnist.communication.manager.recording.CallRecordingJob$View>
+ROUTE POST /api/call/busy CallBusyController#markBusy -> hnist.communication.common.Result<java.lang.Void>
+ROUTE POST /api/calls CallRecordController#create -> hnist.communication.common.Result<hnist.communication.vo.CallRecordVO>
+ROUTE POST /api/cameras CameraController#add -> hnist.communication.common.Result<hnist.communication.vo.CameraVO>
+ROUTE POST /api/cameras/{id}/diagnose CameraController#diagnose -> hnist.communication.common.Result<hnist.communication.manager.camera.CameraDiagnostics$Report>
+ROUTE POST /api/cameras/{id}/play CameraController#play -> hnist.communication.common.Result<hnist.communication.vo.CameraVO>
+ROUTE POST /api/cameras/{id}/reconnect CameraController#reconnect -> hnist.communication.common.Result<hnist.communication.vo.CameraVO>
+ROUTE POST /api/cameras/{id}/refresh CameraController#refresh -> hnist.communication.common.Result<hnist.communication.vo.CameraVO>
+ROUTE POST /api/chat/actions/{type}/{id}/{action} ChatActionController#operate -> hnist.communication.common.Result<hnist.communication.entity.ChatMessageAction>
+ROUTE POST /api/chat/media/upload ChatMediaController#upload -> hnist.communication.common.Result<java.util.Map<java.lang.String, java.lang.Object>>
+ROUTE POST /api/devices DeviceController#create -> hnist.communication.common.Result<hnist.communication.entity.Device>
+ROUTE POST /api/dicts/items DictController#createData -> hnist.communication.common.Result<hnist.communication.entity.DictData>
+ROUTE POST /api/dicts/types DictController#createType -> hnist.communication.common.Result<hnist.communication.entity.DictType>
+ROUTE POST /api/group-messages GroupMessageController#send -> hnist.communication.common.Result<hnist.communication.vo.GroupMessageVO>
+ROUTE POST /api/groups GroupController#create -> hnist.communication.common.Result<hnist.communication.vo.GroupVO>
+ROUTE POST /api/groups/{groupId}/members GroupMemberController#addMembers -> hnist.communication.common.Result<java.lang.Void>
+ROUTE POST /api/location/update LocationController#update -> hnist.communication.common.Result<java.lang.Void>
+ROUTE POST /api/login LoginController#login -> hnist.communication.common.Result<java.util.Map<java.lang.String, java.lang.String>>
+ROUTE POST /api/logout AuthController#logout -> hnist.communication.common.Result<java.lang.Void>
+ROUTE POST /api/map/cities/{regionId}/download MapController#startDownload -> hnist.communication.common.Result<java.lang.Long>
+ROUTE POST /api/map/regions/{regionId}/import MapTileController#importPackage -> hnist.communication.common.Result<java.util.Map<java.lang.String, java.lang.Object>>
+ROUTE POST /api/messages ChatMessageController#create -> hnist.communication.common.Result<hnist.communication.entity.ChatMessage>
+ROUTE POST /api/phone-cameras/{id}/stop PhoneCameraController#stop -> hnist.communication.common.Result<java.lang.Void>
+ROUTE POST /api/phone-cameras/{id}/view PhoneCameraController#requestView -> hnist.communication.common.Result<java.lang.Void>
+ROUTE POST /api/phone-cameras/{id}/viewing PhoneCameraController#viewing -> hnist.communication.common.Result<java.lang.Void>
+ROUTE POST /api/register AuthController#register -> hnist.communication.common.Result<java.lang.Void>
+ROUTE POST /api/trajectory/session/finish LocationController#finishSession -> hnist.communication.common.Result<hnist.communication.entity.TrajectorySession>
+ROUTE POST /api/trajectory/session/start LocationController#startSession -> hnist.communication.common.Result<hnist.communication.entity.TrajectorySession>
+ROUTE POST /api/users UserController#create -> hnist.communication.common.Result<hnist.communication.vo.UserVO>
+ROUTE PUT /api/alarms/{id}/status AlarmController#updateStatus -> hnist.communication.common.Result<java.lang.Void>
+ROUTE PUT /api/calls/{id} CallRecordController#update -> hnist.communication.common.Result<hnist.communication.vo.CallRecordVO>
+ROUTE PUT /api/cameras/{id} CameraController#update -> hnist.communication.common.Result<hnist.communication.vo.CameraVO>
+ROUTE PUT /api/devices/{id} DeviceController#update -> hnist.communication.common.Result<hnist.communication.entity.Device>
+ROUTE PUT /api/dicts/items/{id} DictController#updateData -> hnist.communication.common.Result<hnist.communication.entity.DictData>
+ROUTE PUT /api/dicts/types/{id} DictController#updateType -> hnist.communication.common.Result<hnist.communication.entity.DictType>
+ROUTE PUT /api/groups/{groupId}/members/{userId} GroupMemberController#updateMember -> hnist.communication.common.Result<java.lang.Void>
+ROUTE PUT /api/groups/{id} GroupController#update -> hnist.communication.common.Result<hnist.communication.vo.GroupVO>
+ROUTE PUT /api/map/downloads/{id} MapController#updateDownload -> hnist.communication.common.Result<java.lang.Void>
+ROUTE PUT /api/users/{id} UserController#update -> hnist.communication.common.Result<hnist.communication.vo.UserVO>
+ROUTE PUT /api/users/{id}/password UserController#updatePassword -> hnist.communication.common.Result<java.lang.Void>
+ROUTE PUT /api/users/{id}/profile UserController#updateProfile -> hnist.communication.common.Result<hnist.communication.vo.UserVO>
+ROUTE PUT /api/users/{id}/switch-group UserController#switchGroup -> hnist.communication.common.Result<java.lang.Void>
+ROUTE PUT /api/videos/{fileName} VideoController#rename -> hnist.communication.common.Result<java.lang.Void>

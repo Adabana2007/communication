@@ -1,0 +1,2011 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>管理后台</title>
+<style>
+  /* ========== 变量与基础 ========== */
+  :root {
+    --bg: #f4f6f9;
+    --panel: #ffffff;
+    --input: #ffffff;
+    --border: #dee2e6;
+    --primary: #0d6efd;
+    --primary-hover: #0b5ed7;
+    --text: #212529;
+    --muted: #6c757d;
+    --success: #198754;
+    --danger: #dc3545;
+    --warning: #fd7e14;
+    --sidebar-bg: #343a40;
+    --sidebar-text: rgba(255,255,255,0.7);
+    --sidebar-active: #0d6efd;
+    --shadow: 0 2px 8px rgba(0,0,0,0.08);
+    --sidebar-w: 200px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; }
+
+  /* ========== 登录层 ========== */
+  #login-overlay {
+    position: fixed; inset: 0; background: var(--bg);
+    display: flex; align-items: center; justify-content: center; z-index: 100;
+  }
+  .login-card {
+    background: var(--panel); padding: 40px 36px; border-radius: 12px;
+    width: 360px; text-align: center; box-shadow: var(--shadow);
+  }
+  .login-card h2 { margin-bottom: 28px; font-size: 22px; }
+  .login-card input {
+    width: 100%; padding: 10px 14px; margin-bottom: 14px; border-radius: 6px;
+    border: 1px solid var(--border); background: var(--input); color: var(--text); font-size: 14px;
+  }
+  .login-card input:focus { outline: none; border-color: var(--primary); }
+  .login-card button {
+    width: 100%; padding: 10px; border: none; border-radius: 6px;
+    background: var(--primary); color: #fff; font-size: 15px; font-weight: 600; cursor: pointer;
+  }
+  .login-card button:hover { opacity: 0.85; }
+  .login-card .error { color: var(--danger); font-size: 13px; margin-top: 10px; min-height: 18px; }
+
+  /* ========== 主布局 ========== */
+  #app { display: flex; height: 100vh; }
+  #sidebar {
+    width: var(--sidebar-w); background: var(--sidebar-bg); flex-shrink: 0;
+    display: flex; flex-direction: column; padding: 20px 0;
+  }
+  #sidebar .logo { font-size: 16px; font-weight: 700; padding: 0 20px 24px; color: #fff; }
+  #sidebar .nav-item {
+    padding: 12px 20px; cursor: pointer; font-size: 14px; color: var(--sidebar-text);
+    border-left: 3px solid transparent; transition: all 0.15s;
+  }
+  #sidebar .nav-item:hover { color: #fff; background: rgba(255,255,255,0.06); }
+  #sidebar .nav-item.active { color: var(--sidebar-active); border-left-color: var(--sidebar-active); background: rgba(13,110,253,0.1); }
+  #sidebar .logout {
+    margin-top: auto; padding: 12px 20px; cursor: pointer; font-size: 13px;
+    color: var(--sidebar-text); border-top: 1px solid rgba(255,255,255,0.1);
+  }
+  #sidebar .logout:hover { color: var(--danger); }
+
+  #main { flex: 1; padding: 24px; overflow-y: auto; }
+
+  /* ========== 面板通用 ========== */
+  .panel { display: none; }
+  .panel.active { display: block; }
+  .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .panel-header h2 { font-size: 20px; }
+  .toolbar { display: flex; gap: 10px; margin-bottom: 16px; }
+  .toolbar input {
+    flex: 1; max-width: 260px; padding: 8px 12px; border-radius: 6px;
+    border: 1px solid var(--border); background: var(--input); color: var(--text); font-size: 13px;
+  }
+  .toolbar input:focus { outline: none; border-color: var(--primary); }
+
+  /* ========== 按钮 ========== */
+  .btn { padding: 8px 16px; border-radius: 6px; border: none; font-size: 13px; font-weight: 600; cursor: pointer; color: #fff; }
+  .btn:hover { opacity: 0.85; }
+  .btn-primary { background: var(--primary); }
+  .btn-primary:hover { background: var(--primary-hover); opacity: 1; }
+  .btn-outline { background: transparent; border: 1px solid var(--primary); color: var(--primary); }
+  .btn-outline:hover { color: var(--primary-hover); border-color: var(--primary-hover); opacity: 1; }
+  .btn-sm { padding: 4px 10px; font-size: 12px; }
+  .btn-success { background: var(--success); }
+  .btn-danger { background: var(--danger); }
+  .btn-warning { background: var(--warning); }
+
+  /* ========== 表格 ========== */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+  th { color: var(--muted); font-weight: 500; position: sticky; top: 0; background: #f8f9fa; }
+  tr:hover td { background: #f8f9fa; }
+  .actions { display: flex; gap: 4px; flex-wrap: wrap; }
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; }
+  .tag-admin { background: #cfe2ff; color: var(--primary); }
+  .tag-user { background: #f8f9fa; color: var(--muted); }
+
+  /* ========== 成员管理 ========== */
+  .member-panel { background: var(--panel); border-radius: 8px; box-shadow: var(--shadow); padding: 20px 24px; }
+  .member-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .member-header h2 { font-size: 18px; }
+  .member-header .sub { font-size: 13px; color: var(--muted); margin-left: 12px; }
+  .member-toolbar { display: flex; gap: 10px; margin-bottom: 16px; align-items: center; }
+  .tag-owner { background: #fce4d6; color: #974706; }
+  .tag-admin2 { background: #d1ecf1; color: #0c5460; }
+  .tag-member { background: #f8f9fa; color: var(--muted); }
+  .text-muted { color: var(--muted); font-size: 12px; }
+
+  /* ========== 弹窗 ========== */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 50;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .modal {
+    background: var(--panel); padding: 28px 24px; border-radius: 10px;
+    width: 420px; max-height: 80vh; overflow-y: auto; box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+  }
+  .modal h3 { margin-bottom: 18px; font-size: 17px; }
+  .modal label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 4px; margin-top: 12px; }
+  .modal input, .modal select {
+    width: 100%; padding: 8px 12px; border-radius: 6px;
+    border: 1px solid var(--border); background: var(--input); color: var(--text); font-size: 13px;
+  }
+  .modal input:focus, .modal select:focus { outline: none; border-color: var(--primary); }
+  .modal .btn-row { display: flex; gap: 8px; margin-top: 20px; justify-content: flex-end; }
+  .modal .error { color: var(--danger); font-size: 13px; margin-top: 8px; min-height: 18px; }
+
+  /* ========== 摄像头面板 ========== */
+  .camera-layout { display: flex; gap: 20px; height: calc(100vh - 120px); }
+  .camera-left { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .camera-right { width: 520px; flex-shrink: 0; display: flex; flex-direction: column; }
+  .camera-table-wrap { flex: 1; overflow-y: auto; background: var(--panel); border-radius: 8px; box-shadow: var(--shadow); }
+  #player-panel { background: var(--panel); border-radius: 8px; box-shadow: var(--shadow); overflow: hidden; display: flex; flex-direction: column; height: 100%; }
+  #player-header { padding: 12px 16px; font-size: 14px; font-weight: 600; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+  #player-box { flex: 1; background: #000; display: flex; align-items: center; justify-content: center; position: relative; }
+  #player-box video { width: 100%; height: 100%; object-fit: contain; }
+  #player-box .placeholder, #phonecam-player-box .placeholder { color: #555; font-size: 15px; text-align: center; padding: 20px; }
+  #phonecam-player-box { flex: 1; background: #000; display: flex; align-items: center; justify-content: center; position: relative; }
+  #phonecam-player-box video { width: 100%; height: 100%; object-fit: contain; }
+  .player-panel { background: var(--panel); border-radius: 8px; box-shadow: var(--shadow); overflow: hidden; display: flex; flex-direction: column; height: 100%; }
+  .player-header { padding: 12px 16px; font-size: 14px; font-weight: 600; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+  .online { color: var(--success); font-weight: 500; }
+  .offline { color: var(--muted); }
+
+  /* ========== 分页 ========== */
+  .pagination { display: flex; align-items: center; gap: 12px; margin-top: 16px; font-size: 13px; color: var(--muted); }
+  .pagination button { padding: 6px 12px; }
+  .pagination span { color: var(--text); }
+
+  /* ========== 地图面板 ========== */
+  .map-layout { display: flex; gap: 20px; height: calc(100vh - 120px); }
+  .map-left { width: 240px; flex-shrink: 0; display: flex; flex-direction: column; }
+  .map-left .search-box { margin-bottom: 10px; }
+  .map-left .search-box input {
+    width: 100%; padding: 8px 12px; border-radius: 6px; font-size: 13px;
+    border: 1px solid var(--border); background: var(--input); color: var(--text);
+  }
+  .map-left .search-box input:focus { outline: none; border-color: var(--primary); }
+  .map-province-list { flex: 1; overflow-y: auto; background: var(--panel); border-radius: 8px; box-shadow: var(--shadow); }
+  .map-province-item {
+    padding: 10px 14px; cursor: pointer; font-size: 13px; border-bottom: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .map-province-item:hover { background: #f0f4ff; }
+  .map-province-item.active { background: #e8f0fe; color: var(--primary); font-weight: 600; border-left: 3px solid var(--primary); }
+  .map-province-item .count { font-size: 11px; color: var(--muted); }
+  .map-right { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .map-right .header { margin-bottom: 12px; font-size: 15px; color: var(--muted); }
+  .map-right .header strong { color: var(--text); }
+  .map-city-table-wrap { flex: 1; overflow-y: auto; background: var(--panel); border-radius: 8px; box-shadow: var(--shadow); }
+  .status-tag { display: inline-block; padding: 3px 10px; border-radius: 4px; font-size: 12px; }
+  .status-none { background: #f8f9fa; color: var(--muted); }
+  .status-downloading { background: #cfe2ff; color: var(--primary); }
+  .status-completed { background: #d1e7dd; color: var(--success); }
+  .status-failed { background: #f8d7da; color: var(--danger); }
+  .progress-bar-wrap { width: 80px; height: 6px; background: #e9ecef; border-radius: 3px; overflow: hidden; display: inline-block; vertical-align: middle; margin-right: 6px; }
+  .progress-bar-inner { height: 100%; background: var(--primary); border-radius: 3px; transition: width 0.3s; }
+  .map-placeholder { padding: 60px 20px; text-align: center; color: var(--muted); font-size: 14px; }
+
+  /* ========== 位置管理面板 ========== */
+  .location-layout { display: flex; flex-direction: column; height: calc(100vh - 120px); }
+  .location-toolbar { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
+  .location-toolbar select { padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border); font-size: 13px; }
+  .location-toolbar label { font-size: 13px; display: flex; align-items: center; gap: 4px; cursor: pointer; }
+  .location-table-wrap { flex: 1; overflow-y: auto; background: var(--panel); border-radius: 8px; box-shadow: var(--shadow); }
+  .location-empty { display: flex; align-items: center; justify-content: center; height: 100%; color: var(--muted); font-size: 14px; }
+  .member-count { font-size: 13px; color: var(--muted); }
+
+  /* ========== 通话记录面板 ========== */
+  .stats-row { display: flex; gap: 16px; margin-bottom: 18px; }
+  .stat-card { flex: 1; background: var(--panel); border-radius: 8px; padding: 18px 20px; box-shadow: var(--shadow); }
+  .stat-card .stat-value { font-size: 28px; font-weight: 700; color: var(--text); }
+  .stat-card .stat-label { font-size: 13px; color: var(--muted); margin-top: 4px; }
+  .stat-card.blue .stat-value { color: var(--primary); }
+  .stat-card.green .stat-value { color: var(--success); }
+  .stat-card.orange .stat-value { color: var(--warning); }
+  .filter-bar { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; align-items: center; }
+  .filter-bar select { padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--input); color: var(--text); font-size: 13px; }
+  .filter-bar select:focus { outline: none; border-color: var(--primary); }
+  .filter-bar input[type="date"] { padding: 7px 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--input); color: var(--text); font-size: 13px; }
+  .filter-bar input[type="date"]:focus { outline: none; border-color: var(--primary); }
+  .cb-area { width: 32px; }
+</style>
+</head>
+<body>
+
+<!-- ========== 登录层 ========== -->
+<div id="login-overlay">
+  <div class="login-card">
+    <h2>管理后台</h2>
+    <input id="login-username" placeholder="账号" autocomplete="off">
+    <input id="login-password" type="password" placeholder="密码">
+    <button onclick="Auth.login()">登 录</button>
+    <div class="error" id="login-error"></div>
+  </div>
+</div>
+
+<!-- ========== 主布局 ========== -->
+<div id="app" style="display:none">
+  <div id="sidebar">
+    <div class="logo">管理后台</div>
+    <div class="nav-item active" data-panel="user">用户管理</div>
+    <div class="nav-item" data-panel="group">群组管理</div>
+    <div class="nav-item" data-panel="call">视频信息管理</div>
+    <div class="nav-item" data-panel="camera">摄像头管理</div>
+    <div class="nav-item" data-panel="phonecamera">手机摄像头</div>
+    <div class="nav-item" data-panel="map">地图管理</div>
+    <div class="nav-item" data-panel="location">位置管理</div>
+    <div class="nav-item" data-panel="alarm">报警管理</div>
+    <div class="logout" onclick="Auth.logout()">退出登录</div>
+  </div>
+
+  <div id="main">
+    <!-- ====== 报警管理面板 ====== -->
+    <div class="panel" id="panel-alarm">
+      <div class="panel-header">
+        <h2>报警管理</h2>
+      </div>
+      <div class="toolbar">
+        <input id="alarm-filter-keyword" placeholder="报警人用户名/昵称" oninput="AlarmModule.loadList()">
+        <select id="alarm-filter-status" onchange="AlarmModule.loadList()">
+          <option value="">全部状态</option>
+          <option value="pending">未处理</option>
+          <option value="processing">处理中</option>
+          <option value="done">已处理</option>
+        </select>
+        <input type="date" id="alarm-filter-start" onchange="AlarmModule.loadList()" title="开始时间">
+        <input type="date" id="alarm-filter-end" onchange="AlarmModule.loadList()" title="结束时间">
+        <button class="btn btn-primary" onclick="AlarmModule.resetFilters()">重置</button>
+      </div>
+      <table>
+        <thead>
+          <tr><th>报警人</th><th>警情描述</th><th>位置</th><th>图片/语音</th><th>报警时间</th><th>状态</th><th>操作</th></tr>
+        </thead>
+        <tbody id="alarm-table"></tbody>
+      </table>
+      <div class="pagination" id="alarm-pager"></div>
+    </div>
+
+    <!-- ====== 用户管理面板 ====== -->
+    <div class="panel active" id="panel-user">
+      <div class="panel-header">
+        <h2>用户管理</h2>
+      </div>
+      <div class="toolbar">
+        <input id="user-search" placeholder="搜索用户名/昵称" oninput="UserModule.loadList()">
+        <button class="btn btn-primary" onclick="UserModule.showCreate()">新增用户</button>
+      </div>
+      <table>
+        <thead>
+          <tr><th>ID</th><th>用户名</th><th>昵称</th><th>手机号</th><th>角色</th><th>所属群组</th><th>操作</th></tr>
+        </thead>
+        <tbody id="user-table"></tbody>
+      </table>
+      <div class="pagination" id="user-pager"></div>
+    </div>
+
+    <!-- ====== 群组管理面板 ====== -->
+    <div class="panel" id="panel-group">
+      <!-- 群组列表视图 -->
+      <div id="group-list-view">
+        <div class="panel-header">
+          <h2>群组管理</h2>
+        </div>
+        <div class="toolbar">
+          <input id="group-search" placeholder="搜索群组名称" oninput="GroupModule.loadList()">
+          <button class="btn btn-primary" onclick="GroupModule.showCreate()">新增群组</button>
+        </div>
+        <table>
+          <thead>
+            <tr><th>ID</th><th>群组名称</th><th>群主</th><th>创建时间</th><th>操作</th></tr>
+          </thead>
+          <tbody id="group-table"></tbody>
+        </table>
+        <div class="pagination" id="group-pager"></div>
+      </div>
+
+      <!-- 成员管理视图 -->
+      <div id="group-member-view" style="display:none">
+        <div class="member-panel">
+          <div class="member-header">
+            <div>
+              <button class="btn btn-outline btn-sm" onclick="GroupModule.backToList()">← 返回群组列表</button>
+              <h2 style="display:inline;margin-left:12px" id="member-group-title"></h2>
+              <span class="sub" id="member-count"></span>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="GroupModule.showAddMember()">+ 添加成员</button>
+          </div>
+          <table>
+            <thead>
+              <tr><th style="width:60px">ID</th><th>用户名</th><th>角色</th><th>群昵称</th><th>加入时间</th><th style="width:200px">操作</th></tr>
+            </thead>
+            <tbody id="member-table"></tbody>
+          </table>
+          <div class="pagination" id="member-pager"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== 地图管理面板 ====== -->
+    <div class="panel" id="panel-map">
+      <div class="panel-header">
+        <h2>地图管理</h2>
+      </div>
+      <div class="map-layout">
+        <div class="map-left">
+          <div class="search-box">
+            <input id="map-province-search" placeholder="搜索省" oninput="MapModule.filterProvinces()">
+          </div>
+          <div class="map-province-list" id="map-province-list"></div>
+        </div>
+        <div class="map-right" id="map-city-panel">
+          <div class="map-placeholder">← 点击左侧省份查看城市列表</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== 位置管理面板 ====== -->
+    <div class="panel" id="panel-location">
+      <div class="panel-header">
+        <h2>位置管理</h2>
+      </div>
+      <div class="location-layout">
+        <div class="location-toolbar">
+          <span>选择群组：</span>
+          <select id="location-group-select" onchange="LocationModule.selectGroup(this.value)">
+            <option value="">-- 请选择 --</option>
+          </select>
+          <label><input type="checkbox" id="location-autorefresh" checked onchange="LocationModule.toggleAutoRefresh()"> 自动刷新</label>
+          <span class="member-count" id="location-member-count"></span>
+        </div>
+        <div class="location-table-wrap" id="location-table-wrap">
+          <div class="location-empty">← 请先选择群组</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== 视频信息管理面板 ====== -->
+    <div class="panel" id="panel-call">
+      <div class="panel-header">
+        <h2>视频信息管理</h2>
+      </div>
+      <div class="stats-row" id="call-stats"></div>
+      <div class="filter-bar">
+        <select id="call-filter-mediatype" onchange="CallModule.loadList()">
+          <option value="">全部媒体</option>
+          <option value="1">语音</option>
+          <option value="2">视频</option>
+        </select>
+        <select id="call-filter-calltype" onchange="CallModule.loadList()">
+          <option value="">全部类型</option>
+          <option value="1">点对点</option>
+          <option value="2">群组会议</option>
+          <option value="3">群组视频</option>
+        </select>
+        <select id="call-filter-status" onchange="CallModule.loadList()">
+          <option value="">全部状态</option>
+          <option value="ongoing">进行中</option>
+          <option value="completed">已完成</option>
+          <option value="missed">未接</option>
+          <option value="rejected">拒接</option>
+        </select>
+        <input id="call-filter-keyword" placeholder="搜索参与者" oninput="CallModule.loadList()">
+        <input type="date" id="call-filter-start" onchange="CallModule.loadList()" title="开始时间">
+        <input type="date" id="call-filter-end" onchange="CallModule.loadList()" title="结束时间">
+        <button class="btn btn-outline btn-sm" onclick="CallModule.resetFilters()">重置</button>
+        <button class="btn btn-danger btn-sm" onclick="CallModule.batchDelete()">批量删除</button>
+        <button class="btn btn-primary" onclick="CallModule.showCreate()">新增记录</button>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th class="cb-area"><input type="checkbox" onchange="CallModule.toggleAll(this)"></th>
+            <th>房间ID</th><th>主叫</th><th>被叫</th><th>媒体类型</th><th>通话类型</th>
+            <th>开始时间</th><th>时长</th><th>状态</th><th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="call-table"></tbody>
+      </table>
+      <div class="pagination" id="call-pager"></div>
+    </div>
+
+    <!-- ====== 摄像头管理面板 ====== -->
+    <div class="panel" id="panel-camera">
+      <div class="camera-layout">
+        <div class="camera-left">
+          <div class="panel-header">
+            <h2>摄像头管理</h2>
+            <button class="btn btn-primary" onclick="CameraModule.showAdd()">添加摄像头</button>
+          </div>
+          <div class="camera-table-wrap">
+            <table>
+              <thead><tr><th>ID</th><th>名称</th><th>编号</th><th>型号</th><th>IP</th><th>品牌</th><th>传输</th><th>状态/诊断</th><th>操作</th></tr></thead>
+              <tbody id="camera-table"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="camera-right">
+          <div id="player-panel">
+            <div id="player-header"><span id="player-title">视频预览</span><span id="player-status"></span></div>
+            <div id="player-box"><span class="placeholder">点击摄像头行的「播放」按钮</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== 手机摄像头面板 ====== -->
+    <div class="panel" id="panel-phonecamera">
+      <div class="camera-layout">
+        <div class="camera-left">
+          <div class="panel-header">
+            <h2>手机摄像头管理</h2>
+            <button class="btn btn-primary" onclick="PhoneCameraModule.loadList()">刷新</button>
+          </div>
+          <div class="camera-table-wrap">
+            <table>
+              <thead><tr><th>用户</th><th>设备</th><th>状态</th><th>最后心跳</th><th>操作</th></tr></thead>
+              <tbody id="phonecam-table"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="camera-right">
+          <div class="player-panel">
+            <div class="player-header"><span id="phonecam-player-title">视频预览</span><span id="phonecam-player-status"></span><button class="btn btn-sm btn-primary" onclick="PhoneCameraModule.replay()">重新播放</button></div>
+            <div id="phonecam-player-box"><span class="placeholder">点击「查看」按钮</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 通用弹窗 ========== -->
+<div class="modal-overlay" id="modal-overlay" style="display:none">
+  <div class="modal" id="modal-box"></div>
+</div>
+
+<script src="/camera_player.js"></script>
+<script>
+// ===================================================================
+// 工具函数
+// ===================================================================
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+
+/** 对插入 HTML 文本/属性的动态内容统一转义，避免存储型 XSS。 */
+function escHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, character => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  })[character]);
+}
+
+async function api(path, options = {}) {
+  const headers = { 'Content-Type': 'application/json' };
+  const user = getLoginUser();
+  if (user && user.token) {
+    headers['Authorization'] = 'Bearer ' + user.token;
+  }
+  const res = await fetch(path, { headers, ...options });
+  if (res.status === 403) { Auth.logout(); return; }
+  return res.json();
+}
+
+function formatTime(ts) {
+  if (!ts) return '-';
+  const d = new Date(ts);
+  const pad = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+// 分页渲染
+function renderPager(el, page, pages, onPage) {
+  if (pages <= 1) { el.innerHTML = ''; return; }
+  el.innerHTML = `
+    <button class="btn btn-sm btn-outline" ${page <= 1 ? 'disabled' : ''}>上一页</button>
+    <span>${page} / ${pages}</span>
+    <button class="btn btn-sm btn-outline" ${page >= pages ? 'disabled' : ''}>下一页</button>`;
+  const [prev, next] = el.querySelectorAll('button');
+  if (page > 1) prev.onclick = () => onPage(page - 1);
+  if (page < pages) next.onclick = () => onPage(page + 1);
+}
+
+// 弹窗
+function showModal(title, bodyHtml, onSave) {
+  const box = $('#modal-box');
+  box.innerHTML = `
+    <h3>${escHtml(title)}</h3>
+    ${bodyHtml}
+    <div class="error" id="modal-error"></div>
+    <div class="btn-row">
+      <button class="btn btn-outline" id="modal-cancel">取消</button>
+      <button class="btn btn-primary" id="modal-save">保存</button>
+    </div>`;
+  $('#modal-overlay').style.display = 'flex';
+  $('#modal-cancel').onclick = hideModal;
+  $('#modal-save').onclick = async () => {
+    $('#modal-error').textContent = '';
+    try { await onSave(); hideModal(); } catch (e) { $('#modal-error').textContent = e.message; }
+  };
+}
+function hideModal() { $('#modal-overlay').style.display = 'none'; }
+
+// 获取当前登录用户
+function getLoginUser() {
+  const raw = localStorage.getItem('adminUser');
+  return raw ? JSON.parse(raw) : null;
+}
+
+// ===================================================================
+// WebRTC（WHEP）低延时播放工具 — 摄像头/手机摄像头统一使用
+// ===================================================================
+
+/**
+ * WHEP 拉流播放（WebRTC，延时 <1s，替代 HLS 的高延时）
+ * 流未就绪（404）时自动每秒重试，失败回调 onFail 供调用方提示错误。
+ * @param {HTMLVideoElement} video
+ * @param {string} whepUrl  - 如 http://host:8889/cam_1/whep
+ * @param {Object} [hooks]  - { onReady(pc), onFail(msg) }
+ */
+function playWhep(video, whepUrl, hooks = {}) {
+  stopWhep(video);
+  video._cameraPlayer = CameraPlayer.create(video, {
+    url: whepUrl,
+    onReady: hooks.onReady,
+    onDiagnostic: hooks.onDiagnostic,
+    onState: (state, message, detail) => {
+      if (hooks.onState) hooks.onState(state, message, detail);
+      if (state === 'error' && hooks.onFail) hooks.onFail(message);
+    }
+  });
+  video._cameraPlayer.start();
+}
+
+function stopWhep(video) {
+  if (video && video._cameraPlayer) { video._cameraPlayer.stop(); video._cameraPlayer = null; }
+}
+
+async function cameraApi(path, options = {}) {
+  const controller = new AbortController(), timer = setTimeout(() => controller.abort(), 8000);
+  try { return await api(path, { ...options, signal: controller.signal }) || { code: 401, message: '登录状态已失效' }; }
+  catch (error) { return { code: 503, message: error.name === 'AbortError' ? '摄像头请求超时，请重试' : '无法连接后台，请检查网络后重试' }; }
+  finally { clearTimeout(timer); }
+}
+
+function cameraEscape(value) {
+  return String(value == null ? '' : value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/**
+ * 媒体播放地址修正：把 URL 的 host 替换为"当前打开后台的地址"的 host，
+ * 端口替换为媒体端口（8889 WebRTC）。
+ * 兼容入库时保存为 localhost 或旧 IP 的媒体地址。
+ * @param {string} url
+ * @param {number} mediaPort - 8889 WebRTC / 8888 HLS
+ */
+function fixMediaUrl(url, mediaPort) {
+  if (!url) return '';
+  try {
+    const u = new URL(url);
+    u.hostname = location.hostname;
+    u.port = String(mediaPort);
+    return u.toString();
+  } catch (e) {
+    return url;
+  }
+}
+
+// ===================================================================
+// 认证模块
+// ===================================================================
+const Auth = {
+  login() {
+    const username = $('#login-username').value.trim();
+    const password = $('#login-password').value;
+    if (!username || !password) { $('#login-error').textContent = '请输入账号和密码'; return; }
+    fetch('/api/admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    }).then(r => r.json()).then(json => {
+      if (json.code === 200 && json.data) {
+        const token = json.data.token;
+        // 获取用户详细信息
+        fetch('/api/auth/me', {
+          headers: { 'Authorization': 'Bearer ' + token }
+        }).then(r => r.json()).then(meJson => {
+          if (meJson.code === 200 && meJson.data) {
+            const user = meJson.data.user || {};
+            if (user.username !== 'admin' || user.role !== 1) {
+              $('#login-error').textContent = '只有超级管理员 admin 可以登录后台';
+              return;
+            }
+            localStorage.setItem('adminUser', JSON.stringify({
+              token: token,
+              userId: user.userId,
+              username: user.username,
+              role: user.role,
+              nickname: user.nickname
+            }));
+            Auth.showApp();
+          } else {
+            $('#login-error').textContent = '获取用户信息失败';
+          }
+        }).catch(() => { $('#login-error').textContent = '网络错误'; });
+      } else {
+        $('#login-error').textContent = json.message || '登录失败';
+      }
+    }).catch(() => { $('#login-error').textContent = '网络错误'; });
+  },
+
+  logout() {
+    localStorage.removeItem('adminUser');
+    location.reload();
+  },
+
+  check() {
+    const user = getLoginUser();
+    return !!user && user.username === 'admin' && user.role === 1;
+  },
+
+  showApp() {
+    $('#login-overlay').style.display = 'none';
+    $('#app').style.display = 'flex';
+    UserModule.loadList();
+  }
+};
+
+// 登录回车
+['login-username', 'login-password'].forEach(id => {
+  $('#' + id).addEventListener('keydown', e => { if (e.key === 'Enter') Auth.login(); });
+});
+
+// ===================================================================
+// 用户管理模块
+// ===================================================================
+const UserModule = {
+  page: 1,
+  size: 10,
+  records: [],
+
+  async loadList() {
+    const keyword = $('#user-search').value.trim();
+    const json = await api(`/api/users?page=${this.page}&size=${this.size}&keyword=${encodeURIComponent(keyword)}`);
+    if (json.code !== 200) return;
+    const page = json.data;
+    this.records = page.records || [];
+    $('#user-table').innerHTML = this.records.map(u => `
+      <tr>
+        <td>${Number(u.userId)}</td>
+        <td>${escHtml(u.username || '-')}</td>
+        <td>${escHtml(u.nickname || '-')}</td>
+        <td>${escHtml(u.phone || '-')}</td>
+        <td><span class="tag ${u.role === 0 ? 'tag-user' : 'tag-admin'}">${this.roleLabel(u)}</span></td>
+        <td>${escHtml(u.groupName || '未分类组')}</td>
+        <td class="actions">
+          <button class="btn btn-sm btn-outline" onclick="UserModule.showEdit(${Number(u.userId)})">编辑</button>
+          <button class="btn btn-sm btn-danger" onclick="UserModule.delete(${Number(u.userId)})">删除</button>
+        </td>
+      </tr>`).join('');
+    renderPager($('#user-pager'), this.page, page.pages || 1, p => { this.page = p; this.loadList(); });
+  },
+
+  roleLabel(user) {
+    if (user && user.username === 'admin' && user.role === 1) return '超级管理员';
+    return '普通用户';
+  },
+
+  /** 加载全部群组（供用户编辑/新增的"所属群组"下拉；含未分类组） */
+  async loadGroupOptions() {
+    const json = await api('/api/groups?page=1&size=100');
+    const groups = (json.data && json.data.records) || [];
+    const seen = new Set();
+    const opts = [];
+    for (const g of groups) {
+      const id = g.groupId || g.id;
+      if (!id || seen.has(id)) continue;
+      seen.add(id);
+      opts.push({ id, name: g.name });
+    }
+    if (!seen.has(1)) opts.unshift({ id: 1, name: '未分类组' });
+    return opts;
+  },
+
+  /** 生成群组下拉 HTML（selectedId 为当前选中） */
+  groupSelectHtml(opts, selectedId) {
+    return `<select id="mu-group">${opts.map(o =>
+      `<option value="${Number(o.id)}" ${o.id === selectedId ? 'selected' : ''}>${escHtml(o.name)}</option>`).join('')}</select>`;
+  },
+
+  async showCreate() {
+    const opts = await this.loadGroupOptions();
+    showModal('新增用户', `
+      <label>用户名</label><input id="mu-username" required>
+      <label>密码</label><input id="mu-password" type="password" required>
+      <label>昵称</label><input id="mu-nickname">
+      <label>手机号</label><input id="mu-phone">
+      <label>所属群组</label>${this.groupSelectHtml(opts, 1)}
+    `, async () => {
+      const json = await api('/api/users', {
+        method: 'POST',
+        body: JSON.stringify({
+          username: $('#mu-username').value.trim(),
+          password: $('#mu-password').value,
+          nickname: $('#mu-nickname').value.trim(),
+          phone: $('#mu-phone').value.trim(),
+          role: 0
+        })
+      });
+      if (json.code !== 200) throw new Error(json.message);
+      // 非未分类组时，将用户默认展示群切换为所选群。
+      const gid = parseInt($('#mu-group').value);
+      if (gid !== 1 && json.data && json.data.userId) {
+        const res = await api(`/api/users/${json.data.userId}/switch-group?groupId=${gid}`, { method: 'PUT' });
+        if (res.code !== 200) throw new Error('用户已创建，但入群失败：' + res.message);
+      }
+      UserModule.loadList();
+    });
+  },
+
+  async showEdit(id) {
+    const json = await api('/api/users/' + id);
+    if (json.code !== 200) return;
+    const u = json.data;
+    const opts = await this.loadGroupOptions();
+    const currentGid = u.groupId || 1;
+    showModal('编辑用户', `
+      <label>用户名</label><input id="mu-username" value="${escHtml(u.username || '')}">
+      <label>密码（留空不修改）</label><input id="mu-password" type="password" placeholder="留空则不修改密码">
+      <label>昵称</label><input id="mu-nickname" value="${escHtml(u.nickname || '')}">
+      <label>手机号</label><input id="mu-phone" value="${escHtml(u.phone || '')}">
+      <label>系统角色</label>
+      <div class="text-muted">${this.roleLabel(u)}（不可变更）</div>
+      <label>所属群组</label>${this.groupSelectHtml(opts, currentGid)}
+    `, async () => {
+      const body = {
+        username: $('#mu-username').value.trim(),
+        nickname: $('#mu-nickname').value.trim(),
+        phone: $('#mu-phone').value.trim()
+      };
+      const pwd = $('#mu-password').value;
+      if (pwd) body.password = pwd;
+      const res = await api('/api/users/' + id, { method: 'PUT', body: JSON.stringify(body) });
+      if (res.code !== 200) throw new Error(res.message);
+      // 群组变化时同步成员关系。
+      const gid = parseInt($('#mu-group').value);
+      if (gid !== currentGid) {
+        const sg = await api(`/api/users/${id}/switch-group?groupId=${gid}`, { method: 'PUT' });
+        if (sg.code !== 200) throw new Error('资料已保存，但切换群组失败：' + sg.message);
+      }
+      UserModule.loadList();
+    });
+  },
+
+  async delete(id) {
+    const admin = getLoginUser();
+    if (admin && admin.userId === id) { alert('不能删除自己的账号'); return; }
+    const user = this.records.find(item => item.userId === id);
+    const name = user ? user.username : id;
+    if (!confirm(`确定删除用户「${name}」？`)) return;
+    const json = await api(`/api/users/${id}?currentUserId=${admin?.userId || 0}`, { method: 'DELETE' });
+    if (json.code !== 200) { alert(json.message); return; }
+    UserModule.loadList();
+  }
+};
+
+// ===================================================================
+// 群组管理模块
+// ===================================================================
+const GroupModule = {
+  page: 1,
+  size: 10,
+  records: [],
+  memberRecords: [],
+  memberGroupId: null,
+  memberGroupName: '',
+  memberPage: 1,
+
+  async loadList() {
+    const name = $('#group-search').value.trim();
+    const params = new URLSearchParams({ page: this.page, size: this.size });
+    if (name) params.set('name', name);
+    const json = await api('/api/groups?' + params);
+    if (json.code !== 200) return;
+    const page = json.data;
+    this.records = page.records || [];
+    $('#group-table').innerHTML = this.records.map(g => `
+      <tr>
+        <td>${Number(g.groupId)}</td>
+        <td>${escHtml(g.name || '-')}</td>
+        <td>${escHtml(g.ownerUsername || g.ownerId || '-')}</td>
+        <td>${formatTime(g.createdAt)}</td>
+        <td class="actions">
+          <button class="btn btn-sm btn-outline" onclick="GroupModule.showMembers(${Number(g.groupId)})">成员</button>
+          ${g.groupId !== 1 ? `<button class="btn btn-sm btn-outline" onclick="GroupModule.showEdit(${Number(g.groupId)})">编辑</button>` : ''}
+          <button class="btn btn-sm btn-danger" onclick="GroupModule.delete(${Number(g.groupId)})">删除</button>
+        </td>
+      </tr>`).join('');
+    renderPager($('#group-pager'), this.page, page.pages || 1, p => { this.page = p; this.loadList(); });
+  },
+
+  async showCreate() {
+    showModal('新增群组', `
+      <label>群组名称</label><input id="mg-name" required>
+      <label>群主用户名</label><input id="mg-owner" required>
+      <label>群头像</label><input id="mg-avatar">
+    `, async () => {
+      const json = await api('/api/groups', {
+        method: 'POST',
+        body: JSON.stringify({
+          name: $('#mg-name').value.trim(),
+          ownerUsername: $('#mg-owner').value.trim(),
+          avatar: $('#mg-avatar').value.trim()
+        })
+      });
+      if (json.code !== 200) throw new Error(json.message);
+      GroupModule.loadList();
+    });
+  },
+
+  async showEdit(id) {
+    showModal('编辑群组', `
+      <label>群组名称</label><input id="mg-name" placeholder="留空则不修改">
+      <label>群主用户名</label><input id="mg-owner" placeholder="留空则不修改">
+      <label>群头像</label><input id="mg-avatar" placeholder="留空则不修改">
+    `, async () => {
+      const body = {};
+      const name = $('#mg-name').value.trim();
+      const ownerUsername = $('#mg-owner').value.trim();
+      const avatar = $('#mg-avatar').value.trim();
+      if (name) body.name = name;
+      if (ownerUsername) body.ownerUsername = ownerUsername;
+      if (avatar) body.avatar = avatar;
+      const loginUser = getLoginUser();
+      const res = await api(`/api/groups/${id}?operatorId=${loginUser?.userId || 0}`, { method: 'PUT', body: JSON.stringify(body) });
+      if (res.code !== 200) throw new Error(res.message);
+      GroupModule.loadList();
+    });
+  },
+
+  async delete(id) {
+    const group = this.records.find(item => item.groupId === id);
+    const name = group ? group.name : id;
+    if (!confirm(`确定删除群组「${name}」？`)) return;
+    const loginUser = getLoginUser();
+    const json = await api(`/api/groups/${id}?operatorId=${loginUser?.userId || 0}`, { method: 'DELETE' });
+    if (json.code !== 200) { alert(json.message); return; }
+    GroupModule.loadList();
+  },
+
+  // ========== 成员管理 ==========
+
+  showMembers(groupId) {
+    const group = this.records.find(item => item.groupId === groupId);
+    const groupName = group ? group.name : String(groupId);
+    this.memberGroupId = groupId;
+    this.memberGroupName = groupName;
+    this.memberPage = 1;
+    $('#group-list-view').style.display = 'none';
+    $('#group-member-view').style.display = 'block';
+    $('#member-group-title').textContent = groupName;
+    this.loadMemberList();
+  },
+
+  backToList() {
+    $('#group-member-view').style.display = 'none';
+    $('#group-list-view').style.display = 'block';
+    this.loadList();
+  },
+
+  async loadMemberList() {
+    const json = await api(`/api/groups/${this.memberGroupId}/members?page=${this.memberPage}&size=10`);
+    if (json.code !== 200) return;
+    const page = json.data;
+    const records = page.records || [];
+    this.memberRecords = records;
+    $('#member-count').textContent = `共 ${page.total || records.length} 人`;
+
+    const loginUser = getLoginUser();
+    const isSuperAdmin = loginUser?.username === 'admin' && loginUser?.role === 1;
+    // 当前用户在这个群中的角色
+    const myMember = records.find(m => m.userId === loginUser?.userId);
+    const isOwner = myMember?.role === 'owner';
+    const isAdmin = myMember?.role === 'admin';
+    // 当前用户能管理的最大权限：超管和群主最高，管理员次之
+    const canManageAll = isOwner || isSuperAdmin;
+    const canManageMember = canManageAll || isAdmin;
+
+    $('#member-table').innerHTML = records.map(m => {
+      // 角色标签
+      let roleTag = '';
+      if (m.role === 'owner') roleTag = '<span class="tag tag-owner">群主</span>';
+      else if (m.role === 'admin') roleTag = '<span class="tag tag-admin2">管理员</span>';
+      else roleTag = '<span class="tag tag-member">成员</span>';
+
+      // 操作按钮
+      let btns = '';
+      if (m.role === 'owner') {
+        btns = '<span class="text-muted">—</span>';
+      } else if (m.role === 'admin') {
+        // 管理员可以被提升为群主（仅群主/超管可操作）
+        if (canManageAll) {
+          btns += `<button class="btn btn-sm btn-warning" onclick="GroupModule.promoteToOwner(${Number(m.userId)})">升为群主</button>`;
+        }
+        // 降为成员（仅群主/超管可操作）
+        if (canManageAll) {
+          btns += `<button class="btn btn-sm btn-outline" onclick="GroupModule.setRole(${Number(m.userId)}, 'member')">降为成员</button>`;
+        }
+        // 移除（仅群主/超管可操作，管理员不能互相踢）
+        if (canManageAll) {
+          btns += `<button class="btn btn-sm btn-danger" onclick="GroupModule.removeMember(${Number(m.userId)})">移除</button>`;
+        }
+      } else {
+        // 普通成员 → 可升为管理员
+        if (canManageAll) {
+          btns += `<button class="btn btn-sm btn-outline" onclick="GroupModule.setRole(${Number(m.userId)}, 'admin')">升为管理员</button>`;
+        }
+        // 移除
+        if (canManageMember) {
+          btns += `<button class="btn btn-sm btn-danger" onclick="GroupModule.removeMember(${Number(m.userId)})">移除</button>`;
+        }
+      }
+
+      return `<tr>
+        <td>${Number(m.userId)}</td>
+        <td>${escHtml(m.username || m.userId)}</td>
+        <td>${roleTag}</td>
+        <td>${escHtml(m.nickname || '-')}</td>
+        <td>${formatTime(m.joinedAt)}</td>
+        <td class="actions">${btns || '<span class="text-muted">—</span>'}</td>
+      </tr>`;
+    }).join('');
+    renderPager($('#member-pager'), this.memberPage, page.pages || 1, p => { this.memberPage = p; this.loadMemberList(); });
+  },
+
+  async showAddMember() {
+    const json = await api('/api/users?size=100');
+    if (json.code !== 200) return;
+    const users = (json.data.records || []).filter(u => u.userId);
+    if (users.length === 0) { alert('没有可添加的用户'); return; }
+
+    showModal('添加成员', `
+      <label>选择用户（可多选）</label>
+      <div style="max-height:260px;overflow-y:auto;border:1px solid var(--border);border-radius:6px;padding:8px">
+        ${users.map(u => `
+          <label style="display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer;font-size:13px">
+            <input type="checkbox" value="${Number(u.userId)}" class="add-member-cb">
+            ${escHtml(u.username)} ${u.nickname ? '(' + escHtml(u.nickname) + ')' : ''}
+          </label>`).join('')}
+      </div>
+    `, async () => {
+      const checked = [...document.querySelectorAll('.add-member-cb:checked')].map(cb => parseInt(cb.value));
+      if (checked.length === 0) throw new Error('请至少选择一个用户');
+      const loginUser = getLoginUser();
+      const res = await api(`/api/groups/${this.memberGroupId}/members`, {
+        method: 'POST',
+        body: JSON.stringify({ operatorId: loginUser?.userId, userIds: checked })
+      });
+      if (res.code !== 200) throw new Error(res.message);
+      this.loadMemberList();
+    });
+  },
+
+  // 修改角色（升管理员/降为成员）
+  async setRole(userId, role) {
+    const member = this.memberRecords.find(item => item.userId === userId);
+    const username = member ? member.username : userId;
+    const label = role === 'admin' ? '升为管理员' : '降为成员';
+    if (!confirm(`确定将「${username}」${label}？`)) return;
+    const loginUser = getLoginUser();
+    const res = await api(`/api/groups/${this.memberGroupId}/members/${userId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ operatorId: loginUser?.userId, role: role })
+    });
+    if (res.code !== 200) { alert(res.message); return; }
+    this.loadMemberList();
+  },
+
+  // 升为群主（转让群主给该管理员）
+  async promoteToOwner(userId) {
+    const member = this.memberRecords.find(item => item.userId === userId);
+    const username = member ? member.username : userId;
+    if (!confirm(`确定将群主转让给「${username}」？\n你将降级为普通成员。`)) return;
+    const loginUser = getLoginUser();
+    const res = await api(`/api/groups/${this.memberGroupId}?operatorId=${loginUser?.userId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ ownerUsername: username })
+    });
+    if (res.code !== 200) { alert(res.message); return; }
+    this.loadMemberList();
+  },
+
+  async removeMember(userId) {
+    const member = this.memberRecords.find(item => item.userId === userId);
+    const username = member ? member.username : userId;
+    if (!confirm(`确定将「${username}」移出群组？`)) return;
+    const loginUser = getLoginUser();
+    const res = await api(`/api/groups/${this.memberGroupId}/members?operatorId=${loginUser?.userId}&userIds=${userId}`, { method: 'DELETE' });
+    if (res.code !== 200) { alert(res.message); return; }
+    this.loadMemberList();
+  }
+};
+
+// ===================================================================
+// 摄像头管理模块
+// ===================================================================
+const CameraModule = {
+  currentCam: null, video: null, playGeneration: 0, listGeneration: 0, diagnosticGeneration: 0,
+  clientDiagnostic: null, playbackMessage: '当前页面尚未验证播放',
+
+  async loadList() {
+    const generation = ++this.listGeneration;
+    const json = await cameraApi('/api/cameras');
+    if (generation !== this.listGeneration || json.code !== 200) return;
+    $('#camera-table').innerHTML = (json.data || []).map(c => `
+      <tr>
+        <td>${Number(c.id)}</td><td>${cameraEscape(c.name)}</td>
+        <td>${cameraEscape(c.deviceCode || '-')}</td><td>${cameraEscape(c.deviceModel || '-')}</td>
+        <td>${cameraEscape(c.ip)}</td><td>${cameraEscape(c.brand || '-')}</td>
+        <td>${cameraEscape(c.sourceProtocol || 'automatic')}</td>
+        <td><span class="${c.status === 1 ? 'online' : c.status === 0 ? 'offline' : ''}">${cameraEscape(c.sourceMessage || (c.status === 1 ? '视频源在线 · 尚未验证播放' : c.status === 0 ? '视频源未就绪' : '状态未知'))}</span>
+          <div id="cam-playback-status-${Number(c.id)}" style="font-size:11px;color:#888">${cameraEscape(this.currentCam && this.currentCam.id === c.id ? this.playbackMessage : '当前页面尚未验证播放')}</div>
+          <div style="font-size:11px;color:#888">播放路径：${cameraEscape(c.playbackPath || c.mediamtxPath || '-')}</div>
+          ${c.playbackSourceState === 'not_ready' && c.playbackPath !== c.mediamtxPath ? '<div style="color:#b85c00">所选播放路径尚未就绪</div>' : ''}
+        </td>
+        <td class="actions">
+          <button class="btn btn-sm btn-success" onclick="CameraModule.play(${Number(c.id)})">播放</button>
+          <button class="btn btn-sm btn-outline" onclick="CameraModule.refresh(${Number(c.id)})">刷新状态</button>
+          <button class="btn btn-sm btn-outline" onclick="CameraModule.diagnose(${Number(c.id)})">诊断</button>
+          <button class="btn btn-sm btn-outline" onclick="CameraModule.reconnect(${Number(c.id)})">重连源</button>
+          <button class="btn btn-sm btn-outline" onclick="CameraModule.showEdit(${Number(c.id)})">编辑</button>
+          <button class="btn btn-sm btn-danger" onclick="CameraModule.del(${Number(c.id)})">删除</button>
+        </td>
+      </tr>`).join('');
+  },
+
+  form(c = {}) {
+    const input = (key, label, value, type = 'text', hint = '') => `<label>${label}</label><input id="cam-${key}" type="${type}" value="${cameraEscape(value || '')}" placeholder="${cameraEscape(hint)}">`;
+    const select = (key, label, values, value) => `<label>${label}</label><select id="cam-${key}">${values.map(([v, text]) => `<option value="${v}" ${v === value ? 'selected' : ''}>${text}</option>`).join('')}</select>`;
+    return input('name','名称',c.name) + input('deviceCode','设备编号',c.deviceCode) + input('deviceModel','设备型号',c.deviceModel) +
+      input('ip','IP地址',c.ip) + input('port','ONVIF端口',c.port || 80,'number') + input('username','账号',c.username) +
+      input('password','密码','','password',c.id ? '留空则不修改' : '') +
+      select('brand','品牌',[['generic','通用'],['hikvision','海康'],['dahua','大华']],c.brand || 'generic') +
+      input('rtspUrl','手动RTSP',c.rtspUrl,'text','rtsp://...') +
+      select('sourceProtocol','RTSP传输协议',[['automatic','自动协商'],['tcp','TCP'],['udp','UDP']],c.sourceProtocol || 'automatic') +
+      select('playbackMode','播放输出',[['direct','原始 MediaMTX 路径'],['existing','复用现有 MediaMTX 兼容输出'],['compatible','按需兼容输出（需先诊断并开启服务端开关）']],c.playbackMode || 'direct') +
+      input('playbackPath','现有输出路径（选择复用时填写）',c.playbackMode === 'existing' ? c.playbackPath : '', 'text', '例如 compatible/cam_170；填写路径，不填 URL') +
+      '<div style="font-size:12px;color:#888">优先复用已经配置的输出。转换协议不等于转换编码；普通超时不会自动开启转码。</div>' + input('snapshotUrl','截图地址',c.snapshotUrl);
+  },
+
+  async save(id) {
+    const body = {};
+    for (const key of ['name','deviceCode','deviceModel','ip','port','username','brand','rtspUrl','sourceProtocol','playbackMode','playbackPath','snapshotUrl']) {
+      const value = $('#cam-' + key).value.trim(); body[key] = key === 'port' ? Number(value) || 80 : value;
+    }
+    if ($('#cam-password').value || !id) body.password = $('#cam-password').value;
+    const result = await cameraApi('/api/cameras' + (id ? '/' + id : ''), { method: id ? 'PUT' : 'POST', body: JSON.stringify(body) });
+    if (result.code !== 200) throw new Error(result.message);
+    this.loadList();
+  },
+  showAdd() { showModal('添加摄像头', this.form(), () => this.save(null)); },
+  async showEdit(id) {
+    const json = await cameraApi('/api/cameras/' + id);
+    if (json.code === 200) showModal('编辑摄像头', this.form(json.data), () => this.save(id));
+  },
+
+  async play(id) {
+    this.stopPlayer();
+    const generation = this.playGeneration;
+    $('#player-status').textContent = '正在获取播放地址…';
+    // 服务端 /play 会等待源流和兼容输出就绪；客户端继续轮询直到 ready，
+    // 避免把尚未就绪的地址交给播放器协商。
+    let c = null;
+    const playDeadline = Date.now() + 20000;
+    while (Date.now() < playDeadline) {
+      const json = await cameraApi('/api/cameras/' + id + '/play', { method: 'POST' });
+      if (generation !== this.playGeneration) return;
+      if (json.code !== 200) { $('#player-box').textContent = json.message; $('#player-status').textContent = '播放准备失败'; return; }
+      const detail = json.data;
+      if (detail.playbackSourceState === 'ready') { c = detail; break; }
+      $('#player-status').textContent = detail.sourceState === 'ready' ? '正在准备兼容输出…' : '正在等待视频源…';
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+    if (!c) {
+      $('#player-box').textContent = '视频源未就绪：请确认摄像头在推流后重试，或点本行的「重连源」。';
+      $('#player-status').textContent = '等待超时';
+      return;
+    }
+    this.currentCam = c;
+    $('#player-title').textContent = c.name;
+    const box = $('#player-box'); box.innerHTML = '';
+    if (!c.webrtcUrl) { box.textContent = '该摄像头无播放地址'; return; }
+    const video = document.createElement('video');
+    video.controls = true; video.autoplay = true; video.muted = true;
+    video.style.cssText = 'width:100%;height:100%;object-fit:contain'; box.appendChild(video);
+    this.video = video;
+    const current = () => this.video === video && this.playGeneration === generation;
+    playWhep(video, fixMediaUrl(c.webrtcUrl, 8889), {
+      onState: (state, message, detail) => {
+        if (!current()) return;
+        $('#player-status').textContent = state === 'playing' ? '播放正常（已出画）' : message;
+        this.playbackMessage = state === 'playing' ? '当前页面播放正常（已出画）' : state === 'error' ? '当前页面播放异常：' + message : message;
+        const rowState = $('#cam-playback-status-' + id); if (rowState) rowState.textContent = this.playbackMessage;
+        if (state === 'error') {
+          const note = document.createElement('div'); note.textContent = message + '；可点击本摄像头的“诊断”查看原始源与播放路径结果。';
+          box.appendChild(note); this.clientDiagnostic = detail;
+        }
+      },
+      onDiagnostic: detail => { if (current()) this.clientDiagnostic = detail; }
+    });
+  },
+
+  async refresh(id) {
+    await this.loadList(); // 只读，不重置 path，也不改当前播放器的真实出画状态。
+  },
+  async reconnect(id) {
+    const json = await cameraApi('/api/cameras/' + id + '/reconnect', { method: 'POST' });
+    if (json.code !== 200) { alert(json.message); return; }
+    await this.loadList();
+    if (this.currentCam && this.currentCam.id === id) this.play(id);
+  },
+  reportHtml(report, id) {
+    if (!report) return '尚未取得诊断结果';
+    const sample = (label, result) => `<p><b>${label}</b>：${cameraEscape(result ? result.message : '采样中…')}</p>` +
+      (result ? `<pre style="white-space:pre-wrap">${cameraEscape(JSON.stringify(result.tracks, null, 2))}</pre>` : '');
+    return `<p>${cameraEscape(report.conclusion)}</p><p>源路径：${cameraEscape(report.sourcePath)}；播放路径：${cameraEscape(report.playbackPath)}</p>` +
+      `<p>请求传输：${cameraEscape(report.requestedTransport)}；MediaMTX 配置：${cameraEscape(report.configuredTransport)}</p>` +
+      sample('A 原始 RTSP', report.original) + sample('B 实际播放路径', report.forwarded) +
+      `<p>C 当前网页播放：${cameraEscape(this.currentCam && this.currentCam.id === id && this.clientDiagnostic ? JSON.stringify(this.clientDiagnostic) : '尚未在当前网页验证')}</p>` +
+      `<p>采样时间：${cameraEscape(report.startedAt)}；结果缓存 60 秒。短采样未出帧不等于永久不可播放。</p>`;
+  },
+  async diagnose(id) {
+    const generation = ++this.diagnosticGeneration;
+    const json = await cameraApi('/api/cameras/' + id + '/diagnose', { method: 'POST' });
+    if (generation !== this.diagnosticGeneration) return;
+    if (json.code !== 200) { alert(json.message); return; }
+    showModal('摄像头分层诊断', '<div id="cam-diagnostic">' + this.reportHtml(json.data, id) + '</div>', () => {});
+    $('#modal-save').textContent = '关闭';
+    $('#modal-save').onclick = () => { this.diagnosticGeneration++; hideModal(); };
+    let report = json.data;
+    for (let n = 0; n < 25 && report && report.state === 'running'; n++) {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      if (generation !== this.diagnosticGeneration || !$('#cam-diagnostic') || $('#modal-overlay').style.display === 'none') return;
+      const detail = await cameraApi('/api/cameras/' + id);
+      if (generation !== this.diagnosticGeneration || !$('#cam-diagnostic') || $('#modal-overlay').style.display === 'none') return;
+      report = detail.data && detail.data.diagnostic;
+      $('#cam-diagnostic').innerHTML = this.reportHtml(report, id);
+    }
+    this.loadList();
+  },
+  async del(id) {
+    if (!confirm('确定删除此摄像头？')) return;
+    const json = await cameraApi('/api/cameras/' + id, { method: 'DELETE' });
+    if (json.code !== 200) { alert(json.message); return; }
+    if (this.currentCam && this.currentCam.id === id) this.stopPlayer();
+    this.loadList();
+  },
+  stopPlayer() {
+    this.playGeneration++;
+    if (this.currentCam) {
+      const rowState = $('#cam-playback-status-' + this.currentCam.id); if (rowState) rowState.textContent = '当前页面尚未验证播放';
+    }
+    this.playbackMessage = '当前页面尚未验证播放';
+    if (this.video) stopWhep(this.video);
+    this.video = null; this.currentCam = null; this.clientDiagnostic = null;
+    $('#player-box').innerHTML = '<span class="placeholder">点击摄像头行的“播放”按钮</span>';
+    $('#player-title').textContent = '视频预览'; $('#player-status').textContent = '';
+  }
+};
+
+// ===================================================================
+// 手机摄像头管理模块
+// ===================================================================
+const PhoneCameraModule = {
+  current: null,
+  timer: null,
+  _hbTimer: null,
+  list: [],
+  _generation: 0,
+  _listRequest: 0,
+  _waiting: false,
+  _requesting: false,
+
+  async loadList() {
+    const request = ++this._listRequest;
+    const json = await api('/api/phone-cameras');
+    if (json.code !== 200 || request !== this._listRequest) return;
+    this.list = json.data || [];
+    this._renderList();
+  },
+
+  _renderList() {
+    $('#phonecam-table').innerHTML = this.list.map(pc => {
+      const selected = this.current && this.current.id === pc.id;
+      const statusText = selected && this._waiting ? '等待共享' : ({0:'离线',1:'在线',2:'推流中'}[pc.status] || '-');
+      const statusCls = pc.status === 0 ? 'offline' : 'online';
+      const btnView = pc.status >= 1
+        ? `<button class="btn btn-sm btn-success" onclick="PhoneCameraModule.view(${Number(pc.id)})">查看</button>`
+        : `<button class="btn btn-sm btn-outline" disabled>离线</button>`;
+      const btnStop = pc.status === 2 || selected
+        ? `<button class="btn btn-sm btn-warning" onclick="PhoneCameraModule.stop(${Number(pc.id)})">停止</button>`
+        : '';
+      return `<tr>
+        <td>${escHtml(pc.username || '-')}</td>
+        <td>${escHtml(pc.deviceName || '-')}</td>
+        <td><span class="${statusCls}">${statusText}</span></td>
+        <td>${formatTime(pc.lastHeartbeat)}</td>
+        <td class="actions">${btnView}${btnStop}</td>
+      </tr>`;
+    }).join('');
+  },
+
+  async view(id) {
+    if (this._requesting || (this.current && this.current.id === id)) return;
+    this._stopPlayer();
+    const generation = this._generation;
+    this._requesting = true;
+    try {
+      const json = await api('/api/phone-cameras/' + id + '/view', { method: 'POST' });
+      if (generation !== this._generation) return;
+      if (json.code !== 200) { alert(json.message); return; }
+      this.current = this.list.find(pc => pc.id === id) || { id };
+      this._waiting = true;
+      this._renderList(); // 不等下一次刷新，等待授权期间也能停止。
+      this._startHeartbeat(id);
+      this._pollAndPlay(id, generation);
+    } catch (e) {
+      if (generation === this._generation) alert('请求共享失败，请检查网络后重试');
+    } finally { if (generation === this._generation) this._requesting = false; }
+  },
+
+  _pollAndPlay(id, generation = this._generation) {
+    if (this.timer) clearInterval(this.timer);
+    $('#phonecam-player-box').innerHTML = '<span class="placeholder">等待手机开始推流…</span>';
+    let attempts = 0, busy = false, lost = 0;
+    const poll = async () => {
+      if (busy || generation !== this._generation) return;
+      busy = true;
+      try {
+        const result = await api('/api/phone-cameras/' + id + '/view-status');
+        if (generation !== this._generation || result.code !== 200) return;
+        const status = result.data || {};
+        if (['stopped', 'offline', 'rejected'].includes(status.state)) {
+          const text = status.state === 'stopped' ? '手机已停止共享'
+            : status.state === 'offline' ? '手机已离线，共享已结束'
+            : (status.error ? '手机共享失败：' + status.error : '手机已拒绝共享');
+          this._finish(text, id, status.state === 'offline' ? 0 : 1);
+          return;
+        }
+        if (status.ready) {
+          lost = 0;
+          if (this._waiting) {
+            await this.loadList();
+            if (generation !== this._generation) return;
+            const pc = this.list.find(p => p.id === id);
+            if (pc && pc.webrtcUrl) this._play(pc, generation);
+          }
+        } else if (!this._waiting && ++lost >= 3) {
+          const stopped = await api('/api/phone-cameras/' + id + '/stop', { method: 'POST' });
+          if (generation === this._generation && stopped.code === 200) this._finish('手机共享已中断', id, 1);
+        } else if (this._waiting && ++attempts >= 30) {
+          const stopped = await api('/api/phone-cameras/' + id + '/stop', { method: 'POST' });
+          if (generation === this._generation && stopped.code === 200) this._finish('等待共享超时，请确认手机已允许共享后重新查看', id, 1);
+        }
+      } catch (e) { console.warn('[PhoneCamera] 状态检查失败:', e); }
+      finally { busy = false; }
+    };
+    this.timer = setInterval(poll, 1000);
+    poll();
+  },
+
+  // 播放：全 WebRTC（WHEP）
+  _play(pc, generation = this._generation) {
+    if (generation !== this._generation) return;
+    this.current = pc;
+    this._waiting = false;
+    this._renderList();
+    $('#phonecam-player-title').textContent = `${pc.username} - ${pc.deviceName}`;
+    $('#phonecam-player-status').innerHTML = '<span class="online">推流中</span>';
+    // 查看者每 10 秒发送一次心跳；60 秒无心跳时后端停止推流。
+    this._startHeartbeat(pc.id);
+
+    const box = $('#phonecam-player-box');
+    if (this.video) stopWhep(this.video);
+    box.innerHTML = '';
+
+    // 全 WebRTC（WHEP）：播放地址按当前访问后台的方式动态修正
+    const whepUrl = fixMediaUrl(pc.webrtcUrl, 8889).replace(/\/+$/, '') + '/whep';
+    if (!whepUrl || whepUrl.startsWith('/whep')) {
+      box.innerHTML = '<span class="placeholder">无 WebRTC 播放地址</span>';
+      return;
+    }
+
+    const video = document.createElement('video');
+    video.controls = true;
+    video.autoplay = true;
+    video.muted = true;
+    video.style.cssText = 'width:100%;height:100%;object-fit:contain';
+    box.appendChild(video);
+    this.video = video;
+
+    if (typeof RTCPeerConnection === 'undefined') {
+      box.innerHTML = '<span class="placeholder">当前浏览器不支持 WebRTC 播放</span>';
+      return;
+    }
+    playWhep(video, whepUrl, {
+      onReady: () => {
+        if (generation !== this._generation || this.video !== video) return;
+        $('#phonecam-player-status').innerHTML = '<span class="online">推流中</span>';
+      },
+      onFail: (msg) => {
+        if (generation !== this._generation || this.video !== video) return;
+        console.warn('[PhoneCamera] WHEP 播放失败:', msg);
+        box.innerHTML = '<span class="placeholder">WebRTC 连接失败，请检查手机推流状态/网络</span>';
+      }
+    });
+  },
+
+  async stop(id) {
+    const generation = this._generation;
+    const result = await api('/api/phone-cameras/' + id + '/stop', { method: 'POST' });
+    if (result.code !== 200) { alert(result.message || '停止失败，请重试'); return; }
+    if (generation === this._generation && this.current && this.current.id === id) this._finish('已停止查看', id, 1);
+    else this.loadList();
+  },
+
+  _finish(message, id, status) {
+    this._stopPlayer();
+    this.list = this.list.map(pc => pc.id === id ? { ...pc, status } : pc);
+    this._renderList();
+    $('#phonecam-player-status').textContent = message;
+    $('#phonecam-player-box').textContent = message;
+    this.loadList();
+  },
+
+  _startHeartbeat(id) {
+    this._clearHeartbeat();
+    const beat = async () => {
+      try {
+        await api('/api/phone-cameras/' + id + '/viewing', { method: 'POST' });
+      } catch (error) {
+        console.warn('[PhoneCamera] 查看心跳失败:', error);
+      }
+    };
+    beat();
+    this._hbTimer = setInterval(beat, 10000);
+  },
+
+  _clearHeartbeat() {
+    if (this._hbTimer) { clearInterval(this._hbTimer); this._hbTimer = null; }
+  },
+
+  _stopPlayer() {
+    this._generation++;
+    this._listRequest++;
+    this._requesting = false;
+    this._waiting = false;
+    if (this.timer) { clearInterval(this.timer); this.timer = null; }
+    this._clearHeartbeat();
+    if (this.video) { stopWhep(this.video); this.video = null; }
+    this.current = null;
+    $('#phonecam-player-box').innerHTML = '<span class="placeholder">点击「查看」按钮</span>';
+    $('#phonecam-player-title').textContent = '视频预览';
+    $('#phonecam-player-status').textContent = '';
+  },
+
+  replay() {
+    if (!this.current) return;
+    // 重新等待流就绪后再播放（流未到达时直接换地址播放只会失败）
+    const id = this.current.id;
+    this._generation++;
+    if (this.video) { stopWhep(this.video); this.video = null; }
+    this._waiting = true;
+    this._pollAndPlay(id);
+  }
+};
+
+// ===================================================================
+// 地图管理模块（真实瓦片管理：导入地图包 / 打包下载 / 删除瓦片 / 下载记录）
+// ===================================================================
+const MapModule = {
+  provinces: [],
+  cities: [],
+  selectedId: null,
+
+  async loadList() {
+    const loginUser = getLoginUser();
+    if (!loginUser) return;
+    const json = await api(`/api/map/provinces?userId=${loginUser.userId}`);
+    if (json.code !== 200) return;
+    this.provinces = json.data || [];
+    this.renderProvinces(this.provinces);
+    if (!this.selectedId && this.provinces.length > 0) {
+      const first = this.provinces.find(p => p.totalCount > 0);
+      if (first) this.selectProvince(first.id);
+    }
+  },
+
+  filterProvinces() {
+    const keyword = $('#map-province-search').value.trim().toLowerCase();
+    const list = keyword
+      ? this.provinces.filter(p => p.name.toLowerCase().includes(keyword))
+      : this.provinces;
+    this.renderProvinces(list);
+  },
+
+  renderProvinces(list) {
+    $('#map-province-list').innerHTML = list.length === 0
+      ? '<div class="map-placeholder">无匹配省份</div>'
+      : list.map(p => `
+        <div class="map-province-item${this.selectedId === p.id ? ' active' : ''}"
+             onclick="MapModule.selectProvince(${Number(p.id)})">
+          <span>${escHtml(p.name)}</span>
+          <span class="count">${Number(p.totalCount) || 0} 市</span>
+        </div>`).join('');
+  },
+
+  async selectProvince(id) {
+    this.selectedId = id;
+    this.renderProvinces(this.provinces);
+    const province = this.provinces.find(p => p.id === id);
+    if (!province) return;
+
+    const loginUser = getLoginUser();
+    const json = await api(`/api/map/provinces/${id}/cities?userId=${loginUser.userId}`);
+    if (json.code !== 200) return;
+
+    const cities = json.data || [];
+    this.cities = cities;
+    if (cities.length === 0) {
+      $('#map-city-panel').innerHTML = '<div class="map-placeholder">该省暂无城市数据</div>';
+      return;
+    }
+
+    const rows = cities.map(c => {
+      const hasTiles = (c.tileCount || 0) > 0;
+      let actionHtml = '';
+
+      // 瓦片数据状态（后端导入的真实瓦片）
+      const tileHtml = hasTiles
+        ? `<span class="status-tag status-completed">${c.tileCount} 张 · v${c.mapVersion || 0}</span>`
+        : '<span class="status-tag status-none">未导入</span>';
+
+      // 操作：导入地图包（始终可用）
+      actionHtml += `<button class="btn btn-sm btn-outline" onclick="MapModule.importPackage(${Number(c.id)})">导入包</button> `;
+      if (hasTiles) {
+        actionHtml += `<a class="btn btn-sm btn-outline" href="/api/map/regions/${Number(c.id)}/package.zip" download>下载包</a> `;
+        actionHtml += `<button class="btn btn-sm btn-danger" onclick="MapModule.deleteTiles(${Number(c.id)})">删瓦片</button>`;
+      }
+
+      return `<tr>
+        <td>${escHtml(c.name)}</td>
+        <td>${escHtml(c.size || '-')}</td>
+        <td>${tileHtml}</td>
+        <td class="actions">${actionHtml || '-'}</td>
+      </tr>`;
+    }).join('');
+
+    $('#map-city-panel').innerHTML = `
+      <div class="header">当前查看：<strong>${escHtml(province.name)}</strong>
+        <small style="color:#999">（导入/下载仅支持市级；省级不开放，2026-08-24）</small>
+      </div>
+      <div class="map-city-table-wrap">
+        <table>
+          <thead><tr><th>城市</th><th>包大小</th><th>瓦片数据</th><th>操作</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+  },
+
+  /** 上传 zip 地图包导入 MySQL（真实入库，替换旧数据） */
+  importPackage(regionId) {
+    const city = this.cities.find(item => item.id === regionId);
+    const name = city ? city.name : String(regionId);
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.zip';
+    input.onchange = async () => {
+      const f = input.files && input.files[0];
+      if (!f) return;
+      if (!confirm(`将「${f.name}」导入「${name}」？导入会清空该地区旧瓦片数据。`)) return;
+      const fd = new FormData();
+      fd.append('file', f);
+      const user = getLoginUser();
+      try {
+        const res = await fetch(`/api/map/regions/${regionId}/import`, {
+          method: 'POST',
+          headers: user && user.token ? { 'Authorization': 'Bearer ' + user.token } : {},
+          body: fd
+        });
+        const json = await res.json();
+        if (json.code === 200) {
+          const d = json.data || {};
+          alert(`导入成功：${d.tileCount} 张瓦片，${(d.totalBytes / 1024 / 1024).toFixed(1)} MB`);
+        } else {
+          alert(json.message || '导入失败');
+        }
+      } catch (e) {
+        alert('导入失败：' + e.message);
+      }
+      if (this.selectedId) this.selectProvince(this.selectedId);
+      this.loadList();
+    };
+    input.click();
+  },
+
+  /** 删除城市全部瓦片 */
+  async deleteTiles(regionId) {
+    const city = this.cities.find(item => item.id === regionId);
+    const name = city ? city.name : String(regionId);
+    if (!confirm(`确定删除「${name}」的全部瓦片数据？`)) return;
+    const user = getLoginUser();
+    try {
+      const res = await fetch(`/api/map/regions/${regionId}/tiles`, {
+        method: 'DELETE',
+        headers: user && user.token ? { 'Authorization': 'Bearer ' + user.token } : {}
+      });
+      const json = await res.json();
+      if (json.code !== 200) { alert(json.message || '删除失败'); return; }
+    } catch (e) {
+      alert('删除失败：' + e.message);
+      return;
+    }
+    if (this.selectedId) this.selectProvince(this.selectedId);
+    this.loadList();
+  },
+
+  async startDownload(regionId) {
+    const loginUser = getLoginUser();
+    const json = await api(`/api/map/cities/${regionId}/download?userId=${loginUser.userId}`, { method: 'POST' });
+    if (json.code !== 200) { alert(json.message); return; }
+    if (this.selectedId) this.selectProvince(this.selectedId);
+    this.loadList();
+  },
+};
+
+// ===================================================================
+// 位置管理模块（纯经纬度列表）
+// ===================================================================
+const LocationModule = {
+  timer: null,
+  currentGroupId: null,
+
+  init() {
+    this.loadGroups();
+  },
+
+  async loadGroups() {
+    const loginUser = getLoginUser();
+    if (!loginUser) return;
+    const json = await api('/api/groups?page=1&size=100');
+    if (json.code !== 200) return;
+    const groups = json.data.records || [];
+    const select = $('#location-group-select');
+    select.innerHTML = '<option value="">-- 请选择 --</option>' +
+      groups.map(g => `<option value="${Number(g.groupId)}">${escHtml(g.name)}</option>`).join('');
+  },
+
+  selectGroup(groupId) {
+    this.currentGroupId = groupId ? parseInt(groupId) : null;
+    if (!this.currentGroupId) {
+      this.clearView();
+      return;
+    }
+    this.loadLocations();
+    this.startAutoRefresh();
+  },
+
+  toggleAutoRefresh() {
+    if ($('#location-autorefresh').checked) {
+      this.startAutoRefresh();
+    } else {
+      this.stopAutoRefresh();
+    }
+  },
+
+  startAutoRefresh() {
+    this.stopAutoRefresh();
+    this.timer = setInterval(() => {
+      if (this.currentGroupId) this.loadLocations();
+    }, 10000);
+  },
+
+  stopAutoRefresh() {
+    if (this.timer) { clearInterval(this.timer); this.timer = null; }
+  },
+
+  clearView() {
+    $('#location-table-wrap').innerHTML = '<div class="location-empty">请先选择群组</div>';
+    $('#location-member-count').textContent = '';
+    this.stopAutoRefresh();
+  },
+
+  async loadLocations() {
+    const json = await api(`/api/location/group/${this.currentGroupId}`);
+    if (json.code !== 200) return;
+    const locations = json.data || [];
+    $('#location-member-count').textContent = '共 ' + locations.length + ' 人在线';
+    this.renderTable(locations);
+  },
+
+  renderTable(locations) {
+    if (locations.length === 0) {
+      $('#location-table-wrap').innerHTML = '<div class="location-empty">该群组成员暂未上报位置</div>';
+      return;
+    }
+    const rows = locations.map(loc => `
+      <tr>
+        <td>${Number(loc.userId) || '-'}</td>
+        <td>${escHtml(loc.username || '-')}</td>
+        <td>${loc.latitude ? loc.latitude.toFixed(6) : '-'}</td>
+        <td>${loc.longitude ? loc.longitude.toFixed(6) : '-'}</td>
+        <td>${escHtml(loc.address || '-')}</td>
+        <td>${loc.updatedAt ? formatTime(loc.updatedAt) : '-'}</td>
+      </tr>`).join('');
+
+    $('#location-table-wrap').innerHTML = `
+      <table>
+        <thead>
+          <tr><th>用户ID</th><th>用户名</th><th>纬度</th><th>经度</th><th>地址</th><th>上报时间</th></tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+  }
+};
+
+// ===================================================================
+// 视频信息管理模块
+// ===================================================================
+const CallModule = {
+  page: 1,
+  size: 10,
+  allChecked: false,
+
+  init() {
+    this.loadList();
+    this.loadStats();
+  },
+
+  async loadStats() {
+    const json = await api('/api/calls/stats');
+    if (json.code !== 200) return;
+    const s = json.data;
+    $('#call-stats').innerHTML = `
+      <div class="stat-card blue"><div class="stat-value">${Number(s.totalCount) || 0}</div><div class="stat-label">总通话数</div></div>
+      <div class="stat-card green"><div class="stat-value">${Number(s.todayCount) || 0}</div><div class="stat-label">今日通话</div></div>
+      <div class="stat-card orange"><div class="stat-value">${Number(s.videoRatio || 0).toFixed(1)}%</div><div class="stat-label">视频占比</div></div>
+      <div class="stat-card"><div class="stat-value">${Number(s.avgDuration || 0).toFixed(0)}s</div><div class="stat-label">平均时长</div></div>`;
+  },
+
+  resetFilters() {
+    $('#call-filter-mediatype').value = '';
+    $('#call-filter-calltype').value = '';
+    $('#call-filter-status').value = '';
+    $('#call-filter-keyword').value = '';
+    $('#call-filter-start').value = '';
+    $('#call-filter-end').value = '';
+    this.loadList();
+  },
+
+  async loadList() {
+    const params = new URLSearchParams({
+      page: this.page,
+      size: this.size
+    });
+    const mediaType = $('#call-filter-mediatype').value;
+    const callType = $('#call-filter-calltype').value;
+    const status = $('#call-filter-status').value;
+    const keyword = $('#call-filter-keyword').value.trim();
+    const startTime = $('#call-filter-start').value;
+    const endTime = $('#call-filter-end').value;
+    if (mediaType) params.set('mediaType', mediaType);
+    if (callType) params.set('callType', callType);
+    if (status) params.set('status', status);
+    if (keyword) params.set('keyword', keyword);
+    if (startTime) params.set('startTime', startTime + ' 00:00:00');
+    if (endTime) params.set('endTime', endTime + ' 23:59:59');
+
+    const json = await api('/api/calls?' + params);
+    if (json.code !== 200) return;
+    const page = json.data;
+    this.allChecked = false;
+    $('#call-table').innerHTML = (page.records || []).map(r => `
+      <tr>
+        <td class="cb-area"><input type="checkbox" value="${Number(r.id)}" class="call-cb"></td>
+        <td title="${escHtml(r.roomId || '')}">${r.roomId ? escHtml(r.roomId.substring(0, 8)) + '...' : '-'}</td>
+        <td>${escHtml(r.callerName || r.callerId || '-')}</td>
+        <td>${escHtml(r.calleeName || r.calleeId || '-')}</td>
+        <td><span class="tag ${r.mediaType === 2 ? 'tag-admin' : 'tag-user'}">${r.mediaType === 2 ? '视频' : '语音'}</span></td>
+        <td>${CallModule.callTypeText(r.callType)}</td>
+        <td>${formatTime(r.startTime)}</td>
+        <td>${r.durationSeconds ? r.durationSeconds + 's' : '-'}</td>
+        <td>${CallModule.statusTag(r.status)}</td>
+        <td class="actions">
+          <button class="btn btn-sm btn-outline" onclick="CallModule.showEdit(${Number(r.id)})">编辑</button>
+          <button class="btn btn-sm btn-danger" onclick="CallModule.delete(${Number(r.id)})">删除</button>
+        </td>
+      </tr>`).join('');
+    renderPager($('#call-pager'), this.page, page.pages || 1,
+      p => { this.page = p; this.loadList(); });
+  },
+
+  callTypeText(type) { return ({ 1: '点对点', 2: '群组会议', 3: '群组视频' })[Number(type)] || '未知类型'; },
+
+  statusTag(status) {
+    const map = {
+      'ongoing': '<span class="tag tag-admin2">进行中</span>',
+      'completed': '<span class="tag tag-member">已完成</span>',
+      'missed': '<span class="tag tag-owner">未接</span>',
+      'rejected': '<span class="tag" style="background:#f8d7da;color:#dc3545">拒接</span>'
+    };
+    return map[status] || escHtml(status || '-');
+  },
+
+  toggleAll(cb) {
+    this.allChecked = cb.checked;
+    document.querySelectorAll('.call-cb').forEach(c => c.checked = cb.checked);
+  },
+
+  getCheckedIds() {
+    return [...document.querySelectorAll('.call-cb:checked')].map(cb => cb.value);
+  },
+
+  async showCreate() {
+    showModal('新增通话记录', `
+      <label>主叫用户ID</label><input id="mc-callerId" type="number" required>
+      <label>被叫用户ID（群组会议、群组视频不填）</label><input id="mc-calleeId" type="number">
+      <label>媒体类型</label>
+      <select id="mc-mediaType"><option value="1">语音</option><option value="2">视频</option></select>
+      <label>通话类型</label>
+      <select id="mc-callType"><option value="1">点对点</option><option value="2">群组会议</option><option value="3">群组视频</option></select>
+      <label>开始时间</label><input id="mc-startTime" type="datetime-local">
+      <label>结束时间</label><input id="mc-endTime" type="datetime-local">
+      <label>通话时长(秒)</label><input id="mc-durationSeconds" type="number" value="0">
+      <label>状态</label>
+      <select id="mc-status">
+        <option value="ongoing">进行中</option>
+        <option value="completed" selected>已完成</option>
+        <option value="missed">未接</option>
+        <option value="rejected">拒接</option>
+      </select>
+      <label>录制文件路径</label><input id="mc-recordFileUrl" placeholder="如 /room123.mp4">
+    `, async () => {
+      const body = {
+        callerId: parseInt($('#mc-callerId').value),
+        mediaType: parseInt($('#mc-mediaType').value),
+        callType: parseInt($('#mc-callType').value),
+        durationSeconds: parseInt($('#mc-durationSeconds').value) || 0,
+        status: $('#mc-status').value,
+        recordFileUrl: $('#mc-recordFileUrl').value.trim()
+      };
+      const calleeId = $('#mc-calleeId').value;
+      if (calleeId) body.calleeId = parseInt(calleeId);
+      const startTime = $('#mc-startTime').value;
+      if (startTime) body.startTime = startTime.replace('T', ' ') + ':00';
+      const endTime = $('#mc-endTime').value;
+      if (endTime) body.endTime = endTime.replace('T', ' ') + ':00';
+      const json = await api('/api/calls', { method: 'POST', body: JSON.stringify(body) });
+      if (json.code !== 200) throw new Error(json.message);
+      CallModule.loadList();
+      CallModule.loadStats();
+    });
+  },
+
+  async showEdit(id) {
+    const json = await api('/api/calls/' + id);
+    if (json.code !== 200) return;
+    const r = json.data;
+    const fmt = ts => ts ? ts.replace(' ', 'T').substring(0, 19) : '';
+    showModal('编辑通话记录', `
+      <label>主叫用户ID</label><input id="mc-callerId" type="number" value="${Number(r.callerId) || ''}">
+      <label>被叫用户ID</label><input id="mc-calleeId" type="number" value="${Number(r.calleeId) || ''}">
+      <label>媒体类型</label>
+      <select id="mc-mediaType">
+        <option value="1" ${r.mediaType === 1 ? 'selected' : ''}>语音</option>
+        <option value="2" ${r.mediaType === 2 ? 'selected' : ''}>视频</option>
+      </select>
+      <label>通话类型</label>
+      <select id="mc-callType">
+        <option value="1" ${r.callType === 1 ? 'selected' : ''}>点对点</option>
+        <option value="2" ${r.callType === 2 ? 'selected' : ''}>群组会议</option>
+        <option value="3" ${r.callType === 3 ? 'selected' : ''}>群组视频</option>
+      </select>
+      <label>开始时间</label><input id="mc-startTime" type="datetime-local" step="1" value="${escHtml(fmt(r.startTime))}">
+      <label>结束时间</label><input id="mc-endTime" type="datetime-local" step="1" value="${escHtml(fmt(r.endTime))}">
+      <label>通话时长(秒)</label><input id="mc-durationSeconds" type="number" value="${Number(r.durationSeconds) || 0}">
+      <label>状态</label>
+      <select id="mc-status">
+        <option value="ongoing" ${r.status === 'ongoing' ? 'selected' : ''}>进行中</option>
+        <option value="completed" ${r.status === 'completed' ? 'selected' : ''}>已完成</option>
+        <option value="missed" ${r.status === 'missed' ? 'selected' : ''}>未接</option>
+        <option value="rejected" ${r.status === 'rejected' ? 'selected' : ''}>拒接</option>
+      </select>
+      <label>录制文件路径</label><input id="mc-recordFileUrl" value="${escHtml(r.recordFileUrl || '')}">
+    `, async () => {
+      const body = {};
+      body.callerId = parseInt($('#mc-callerId').value);
+      const calleeId = $('#mc-calleeId').value;
+      if (calleeId) body.calleeId = parseInt(calleeId); else body.calleeId = null;
+      body.mediaType = parseInt($('#mc-mediaType').value);
+      body.callType = parseInt($('#mc-callType').value);
+      body.durationSeconds = parseInt($('#mc-durationSeconds').value) || 0;
+      body.status = $('#mc-status').value;
+      body.recordFileUrl = $('#mc-recordFileUrl').value.trim();
+      const startTime = $('#mc-startTime').value;
+      if (startTime) body.startTime = startTime.length === 16 ? startTime + ':00' : startTime;
+      const endTime = $('#mc-endTime').value;
+      if (endTime) body.endTime = endTime.length === 16 ? endTime + ':00' : endTime;
+      const res = await api('/api/calls/' + id, { method: 'PUT', body: JSON.stringify(body) });
+      if (res.code !== 200) throw new Error(res.message);
+      CallModule.loadList();
+      CallModule.loadStats();
+    });
+  },
+
+  async delete(id) {
+    if (!confirm('确定删除该通话记录？')) return;
+    const json = await api('/api/calls/' + id, { method: 'DELETE' });
+    if (json.code !== 200) { alert(json.message); return; }
+    CallModule.loadList();
+    CallModule.loadStats();
+  },
+
+  async batchDelete() {
+    const ids = this.getCheckedIds();
+    if (ids.length === 0) { alert('请勾选记录'); return; }
+    if (!confirm(`确定删除选中的 ${ids.length} 条记录？`)) return;
+    const params = new URLSearchParams();
+    ids.forEach(id => params.append('ids', id));
+    const json = await api('/api/calls/batch?' + params, { method: 'DELETE' });
+    if (json.code !== 200) { alert(json.message); return; }
+    CallModule.loadList();
+    CallModule.loadStats();
+  },
+};
+
+// ===================================================================
+// 报警管理模块
+// ===================================================================
+const AlarmModule = {
+  page: 1,
+  size: 10,
+  _records: [],
+
+  async loadList(p) {
+    if (p) this.page = p;
+    const qs = new URLSearchParams({ page: this.page, size: this.size });
+    const keyword = document.getElementById('alarm-filter-keyword').value.trim();
+    const status = document.getElementById('alarm-filter-status').value;
+    const start = document.getElementById('alarm-filter-start').value;
+    const end = document.getElementById('alarm-filter-end').value;
+    if (keyword) qs.set('keyword', keyword);
+    if (status) qs.set('status', status);
+    if (start) qs.set('start', start);
+    if (end) qs.set('end', end);
+    const json = await api('/api/alarms?' + qs.toString());
+    if (json.code !== 200) { console.error('加载报警列表失败', json); return; }
+    const records = json.data.records || [];
+    this._records = records;
+    const statusMap = {
+      pending: ['未处理', '#faad14'],
+      processing: ['处理中', '#1677ff'],
+      done: ['已处理', '#52c41a']
+    };
+    document.getElementById('alarm-table').innerHTML = records.map(r => {
+      const st = statusMap[r.status] || [escHtml(r.status || '未知'), '#999'];
+      const who = r.nickname ? `${escHtml(r.username)}(${escHtml(r.nickname)})` : escHtml(r.username || `用户${r.userId}`);
+      const loc = (r.latitude && r.longitude) ? `${Number(r.latitude).toFixed(5)}, ${Number(r.longitude).toFixed(5)}` : '-';
+      let imgs = r.imageMediaIds || [];
+      const imgBadge = imgs.length ? `${imgs.length}图` : '';
+      let media = imgBadge;
+      if (r.voiceMediaId) media += (media ? ' ' : '') + '语音';
+      if (!media) media = '<span class="text-muted">—</span>';
+      const handled = r.status === 'done'
+        ? ` · ${escHtml(r.handledByName || '-')} @${escHtml((r.handledAt || '').replace('T', ' ').substring(0, 16))}`
+        : '';
+      return `<tr>
+        <td style="white-space:nowrap">${who}</td>
+        <td style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escHtml(r.description || '')}">${escHtml(r.description || '')}</td>
+        <td style="white-space:nowrap">${loc}</td>
+        <td style="white-space:nowrap">${media}</td>
+        <td style="white-space:nowrap">${escHtml((r.createdAt || '').replace('T', ' ').substring(0, 19))}</td>
+        <td style="white-space:nowrap"><span class="badge" style="color:${st[1]};border-color:${st[1]}">${st[0]}</span>${handled}</td>
+        <td class="actions">
+          <button class="btn btn-sm btn-primary" onclick="AlarmModule.detail(${Number(r.id)})">详情</button>
+          ${r.status === 'done' ? '' : `<button class="btn btn-sm btn-success" onclick="AlarmModule.handle(${Number(r.id)})">处理</button>`}
+        </td>
+      </tr>`;
+    }).join('');
+    const pages = Math.ceil((json.data.total || 0) / this.size) || 1;
+    renderPager(document.getElementById('alarm-pager'), this.page, pages, p => this.loadList(p));
+  },
+
+  resetFilters() {
+    document.getElementById('alarm-filter-keyword').value = '';
+    document.getElementById('alarm-filter-status').value = '';
+    document.getElementById('alarm-filter-start').value = '';
+    document.getElementById('alarm-filter-end').value = '';
+    this.loadList(1);
+  },
+
+  detail(id) {
+    const r = (this._records || []).find(x => x.id === id);
+    if (!r) return;
+    let imgs = '';
+    const mediaIds = (r.imageMediaIds || []).filter(id => Number.isSafeInteger(Number(id)) && Number(id) > 0);
+    if (mediaIds.length) {
+      imgs = mediaIds.map(id => `<img src="/api/alarms/media/${Number(id)}" alt="报警图片" style="max-width:100%;border-radius:6px;margin:4px 0;display:block">`).join('');
+    }
+    if (!imgs) imgs = '<span class="text-muted">无</span>';
+    let voice = '<span class="text-muted">无</span>';
+    if (r.voiceMediaId) {
+      const voiceId = Number(r.voiceMediaId);
+      voice = Number.isSafeInteger(voiceId) && voiceId > 0
+        ? `<audio controls style="width:100%;margin-top:4px" src="/api/alarms/media/${voiceId}"></audio>`
+        : '<span class="text-muted">无效媒体</span>';
+    }
+    showModal('报警详情', `
+      <div class="form-group"><label>报警人</label><div>${r.nickname ? `${escHtml(r.username)}(${escHtml(r.nickname)})` : escHtml(r.username || `用户${r.userId}`)}（ID ${Number(r.userId)}）</div></div>
+      <div class="form-group"><label>警情描述</label><div>${escHtml(r.description || '')}</div></div>
+      <div class="form-group"><label>位置</label><div>${Number(r.latitude || 0).toFixed(6)}, ${Number(r.longitude || 0).toFixed(6)}</div></div>
+      <div class="form-group"><label>报警时间</label><div>${escHtml((r.createdAt || '').replace('T', ' ').substring(0, 19))}</div></div>
+      <div class="form-group"><label>语音（${r.voiceDuration ? Number(r.voiceDuration) + 's' : '—'}）</label><div>${voice}</div></div>
+      <div class="form-group"><label>图片</label><div>${imgs}</div></div>
+      ${r.handleRemark ? `<div class="form-group"><label>处理备注</label><div>${escHtml(r.handleRemark)}</div></div>` : ''}
+    `, async () => {});
+  },
+
+  handle(id) {
+    const r = (this._records || []).find(x => x.id === id);
+    if (!r) return;
+    showModal('处理报警', `
+      <div class="form-group"><label>处理状态</label>
+        <select id="alarm-handle-status" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px">
+          <option value="processing" ${r.status === 'processing' ? 'selected' : ''}>处理中</option>
+          <option value="done" ${r.status === 'done' ? 'selected' : ''}>已处理</option>
+        </select>
+      </div>
+      <div class="form-group"><label>处理备注（选填）</label>
+        <textarea id="alarm-handle-remark" style="width:100%;height:70px;padding:8px;border:1px solid var(--border);border-radius:6px" placeholder="填写处理结果/说明">${escHtml(r.handleRemark || '')}</textarea>
+      </div>
+    `, async () => {
+      const status = document.getElementById('alarm-handle-status').value;
+      const rm = document.getElementById('alarm-handle-remark').value.trim();
+      const res = await api(`/api/alarms/${id}/status`, {
+        method: 'PUT',
+        body: JSON.stringify({ status, remark: rm })
+      });
+      if (res.code !== 200) throw new Error(res.message || '处理失败');
+      this.loadList();
+    });
+  }
+};
+
+// ===================================================================
+// 初始化
+// ===================================================================
+$$('#sidebar .nav-item').forEach(item => {
+  item.addEventListener('click', () => {
+    $$('#sidebar .nav-item').forEach(n => n.classList.remove('active'));
+    item.classList.add('active');
+    const panelName = item.dataset.panel;
+    $$('.panel').forEach(p => p.classList.remove('active'));
+    $('#panel-' + panelName).classList.add('active');
+    if (panelName === 'group') {
+      GroupModule.backToList();
+    }
+    if (panelName === 'camera') CameraModule.loadList();
+    if (panelName === 'map') MapModule.loadList();
+    if (panelName === 'phonecamera') PhoneCameraModule.loadList();
+    if (panelName === 'location') LocationModule.init();
+    if (panelName === 'call') CallModule.init();
+    if (panelName === 'alarm') AlarmModule.loadList(1);
+  });
+});
+
+if (Auth.check()) {
+  Auth.showApp();
+}
+</script>
+
+</body>
+</html>
